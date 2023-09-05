@@ -1,0 +1,17 @@
+name: Deploy Zola
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy_website:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: shalzz/zola-deploy-action
+        uses: shalzz/zola-deploy-action@v0.17.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
