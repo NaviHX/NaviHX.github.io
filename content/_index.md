@@ -17,9 +17,9 @@ Piracist / 海賊愛好家
 
 [随便看看我写的文章 / Explore my insightful blog posts on a variety of topics](./posts/)
 
-## Online Presence
+## Wired
 
-和我保持连接。 / Stay connected with me.
+和我保持连线。 / Stay wired with me.
 
 - 密钥指纹 / GPG Fingerprint: [0x3FC094A92F52A8604E10DEBA6953875703120633](https://keys.openpgp.org/search?q=3FC094A92F52A8604E10DEBA6953875703120633)
 - 电子邮件 / Email: [navihex1412@gmail.com](mailto:navihex1412@gmail.com)
