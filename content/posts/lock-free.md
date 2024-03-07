@@ -51,7 +51,7 @@ impl<T> Stack<T> {
 - 线程调度。在更换 `head` 值的过程中切换到了另外一个线程执行。
 - 修改扩散。当前线程对值的修改可能还没有扩散到其他核心的缓存中，其他核心可能会读取到以前的值。
 
-最朴素的想法就是在重新赋值前检查一下 `head` 是否是原本的值。
+最朴素的想法就是在重新赋值前检查以下 `head` 是否是原本的值。
 
 ```rust
 let head = self.head;
@@ -69,7 +69,7 @@ if head == self.head {
 - 原子性。比较和赋值作为同一个原子指令，其间不可调度。
 - 内存屏障。修改后其他核心必须知道这个值需要重新加载进入到缓存中。
 
-`Rust` 的 `Atomic` 可以帮助我们实现这两个条件。一个 `Atomic*` 提供了 `compare_and_swap` / `compare_exchange` 方法，可以进行原子地比较和替换。同时作为参数的 `Ordering` 提供了与其他对内存操作的事件的 `happen before` 关系进行了抽象（换句话说，提供了类似 `fence` 指令的功能）。因此，我们可以把栈的实现改成如下这种利用了 `Atomic` 的形式：
+[`Rust` 的 `Atomic` 可以帮助我们实现这两个条件](https://doc.rust-lang.org/nomicon/atomics.html)。一个 `Atomic*` 提供了 `compare_and_swap` / `compare_exchange` 方法，可以进行原子地比较和替换。同时作为参数的 `Ordering` 提供了与其他对内存操作的事件的 `happen before` 关系进行了抽象（换句话说，提供了类似 `fence` 指令的功能）。因此，我们可以把栈的实现改成如下这种利用了 `Atomic` 的形式：
 
 ```rust
 use std::ptr::{self, null_mut, NonNull};
