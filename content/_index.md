@@ -24,5 +24,4 @@ Piracist / 海賊愛好家
 - 密钥指纹 / GPG Fingerprint: [0x3FC094A92F52A8604E10DEBA6953875703120633](https://keys.openpgp.org/search?q=3FC094A92F52A8604E10DEBA6953875703120633)
 - 电子邮件 / Email: [navihex1412@gmail.com](mailto:navihex1412@gmail.com)
 - 即时消息 / Matrix: [navi_horselover@matrix.org](https://matrix.to/#/@navi_horselover:matrix.org)
-- 微博 / Fediverse -> [Misskey](https://misskey-hub.net/en/) -> [喵窝 nya.one](https://nya.one): [@navi_horselover@nya.one](https://nya.one/@navi_horselover)
 
