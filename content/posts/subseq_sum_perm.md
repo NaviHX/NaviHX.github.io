@@ -1,6 +1,6 @@
 +++
 title = "Subseq Sum Permutations"
-date = "2023-09-09"
+date = "2024-03-09"
 tags = ["dev"]
 categories = ["dev"]
 +++
