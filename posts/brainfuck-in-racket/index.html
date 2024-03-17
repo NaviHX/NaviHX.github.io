@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+      <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+      <meta name="robots" content="index, follow">
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <title>Brainf*cking with Racket</title>
+      
+      
+      
+      <meta name="title" content="Brainf*cking with Racket">
+      
+      
+      
+      <meta property="og:type" content="website">
+      <meta property="og:url" content="https://refrigerator.navihx.top/posts/brainfuck-in-racket/">
+      
+      <meta property="og:site_name" content="">
+      
+      
+      <meta property="og:title" content="Brainf*cking with Racket">
+      
+      
+      
+      <meta property="og:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://refrigerator.navihx.top/posts/brainfuck-in-racket/">
+      
+      <meta property="twitter:title" content="Brainf*cking with Racket">
+      
+      
+      
+      <meta property="twitter:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      <link rel="canonical" href="https://refrigerator.navihx.top/posts/brainfuck-in-racket/">
+      
+      <link rel="shortcut icon" type="image/x-icon" href="https://refrigerator.navihx.top/favicon.ico">
+      
+      
+      
+      
+      <link rel="alternate" type="application/atom+xml" title="RSS" href="https://refrigerator.navihx.top/atom.xml">
+      
+      
+      
+      <link rel="stylesheet" href="https://refrigerator.navihx.top/css/style.css"/>
+      
+   </head>
+   <body>
+      <div class="wrapper">
+         <header>
+            
+            <nav class="navBar">
+               
+               
+               
+               <a href="/" >&#x2F;home&#x2F;</a>
+               
+               
+               
+               
+               <a href="/posts" >&#x2F;posts&#x2F;</a>
+               
+               
+
+               <div class="themeSwitch">
+                  <button class="themeButton light" onclick="setTheme('light')" title="Light mode">◐</button>
+                  <button class="themeButton dark" onclick="setTheme('dark')" title="Dark mode">◑</button>
+               </div>
+            </nav>
+            
+
+            <script>
+               const setTheme = (theme) => {
+                   document.documentElement.className = theme;
+                   localStorage.setItem('theme', theme);
+               }
+               const getTheme = () => {
+                   const theme = localStorage.getItem('theme');
+                   theme && setTheme(theme);
+               }
+               getTheme()
+            </script>
+         </header>
+
+         <main>
+            
+
+
+<h2>Table of contents</h2>
+<ul>
+
+  <li>
+  <a href="https://refrigerator.navihx.top/posts/brainfuck-in-racket/#intro">Intro</a>
+  
+  </li>
+
+  <li>
+  <a href="https://refrigerator.navihx.top/posts/brainfuck-in-racket/#racket-guan-yu-yu-fa-de-ji-chu-she-shi">Racket 关于语法的基础设施</a>
+  
+  </li>
+
+  <li>
+  <a href="https://refrigerator.navihx.top/posts/brainfuck-in-racket/#brainfuck-yu-fa">brainfuck 语法</a>
+  
+  </li>
+
+  <li>
+  <a href="https://refrigerator.navihx.top/posts/brainfuck-in-racket/#shi-xian-brainfuck-yu-yi">实现 brainfuck 语义</a>
+  
+  </li>
+
+  <li>
+  <a href="https://refrigerator.navihx.top/posts/brainfuck-in-racket/#expand-level">Expand level</a>
+  
+  </li>
+
+  <li>
+  <a href="https://refrigerator.navihx.top/posts/brainfuck-in-racket/#reader">Reader</a>
+  
+    <ul>
+      
+        <li>
+        <a href="https://refrigerator.navihx.top/posts/brainfuck-in-racket/#shi-xian-parser">实现 Parser</a>
+          <ul>
+          
+          </ul>
+        </li>
+      
+        <li>
+        <a href="https://refrigerator.navihx.top/posts/brainfuck-in-racket/#zai-brainfuck-zhong-jia-ru-jie-xi-qi">在 brainfuck 中加入解析器</a>
+          <ul>
+          
+          </ul>
+        </li>
+      
+        <li>
+        <a href="https://refrigerator.navihx.top/posts/brainfuck-in-racket/#hello-world">Hello world!</a>
+          <ul>
+          
+          </ul>
+        </li>
+      
+    </ul>
+  
+  </li>
+
+  <li>
+  <a href="https://refrigerator.navihx.top/posts/brainfuck-in-racket/#jie-yu">结语</a>
+  
+  </li>
+
+  <li>
+  <a href="https://refrigerator.navihx.top/posts/brainfuck-in-racket/#can-kao">参考</a>
+  
+  </li>
+
+</ul>
+
+
+
+<h1 id="intro">Intro</h1>
+<p>Racket 等 Lisp 家族的语言拥有强大的宏, 可以让我们很方便地对语言进行扩展,
+但是使用宏却带来了两点限制:</p>
+<ul>
+<li>宏不能限制它的上下文和改变上下文的含义.
+宏的设计者无法阻止使用者在任何地方使用宏, 这可能会造成预想不到的后果.</li>
+<li>宏使用的词法必须遵守原语言的词法规则.</li>
+</ul>
+<p>使用宏对语言进行的改造是十分有限的. 如果需要对语言进行深层次的定制,
+仅仅使用宏就有点力不从心了. 本文将从 brainfuck 出发, 使用 racket
+创造出一门基于 racket 的语言, 同时也是我最近这段时间学习 racket 的总结.</p>
+<p>目标是成功运行以下代码:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>#lang bf
+</span><span>++++++[&gt;++++++++++++&lt;-]&gt;.
+</span><span>&gt;++++++++++[&gt;++++++++++&lt;-]&gt;+.
+</span><span>+++++++..+++.&gt;++++[&gt;+++++++++++&lt;-]&gt;.
+</span><span>&lt;+++[&gt;----&lt;-]&gt;.&lt;&lt;&lt;&lt;&lt;+++[&gt;+++++&lt;-]&gt;.
+</span><span>&gt;&gt;.+++.------.--------.&gt;&gt;+.
+</span></code></pre>
+<h1 id="racket-guan-yu-yu-fa-de-ji-chu-she-shi">Racket 关于语法的基础设施</h1>
+<p>为了定制我们的 brainfuck , 我们需要了解 Racket 本身提供的设施.
+在我们编写 racket 源文件时, 总会像这样写:</p>
+<pre data-lang="racket" style="background-color:#2b303b;color:#c0c5ce;" class="language-racket "><code class="language-racket" data-lang="racket"><span>#lang racket
+</span><span style="color:#65737e;">;; our code begins ...
+</span></code></pre>
+<p>开头的 <code>#lang racket</code> 指明了这个源文件使用的语言, 这种特性被称为 module
+language. 这个其实是 racket module 的一个 shorthand. 展开为完整形式如下:</p>
+<pre data-lang="racket" style="background-color:#2b303b;color:#c0c5ce;" class="language-racket "><code class="language-racket" data-lang="racket"><span>(</span><span style="color:#b48ead;">module </span><span>&lt;file_name&gt; racket
+</span><span>  </span><span style="color:#65737e;">;; our code begins ...)
+</span></code></pre>
+<p><code>module</code> 中的 <code>racket</code> 其实就是最开始导入的包名(即所谓 <code>init module</code> ).
+这提供了一种控制语法的方法. 比如说可以为我们定制的语言提供一个
+<code>function</code> 关键字:</p>
+<pre data-lang="racket" style="background-color:#2b303b;color:#c0c5ce;" class="language-racket "><code class="language-racket" data-lang="racket"><span>&gt; (</span><span style="color:#b48ead;">module </span><span>raquet racket
+</span><span>    (</span><span style="color:#b48ead;">provide </span><span>(except-out (all-from-out racket) </span><span style="color:#b48ead;">lambda</span><span>) </span><span style="color:#65737e;">;; 导出racket中除了lambda外的内容
+</span><span>       (rename-out [lambda function]))) </span><span style="color:#65737e;">;; 将lambda作为function导出
+</span><span>&gt; (</span><span style="color:#b48ead;">module </span><span>src-file &#39;raquet </span><span style="color:#65737e;">;; 可以理解为 #lang raquet
+</span><span>    (map (function (points) (</span><span style="color:#b48ead;">case </span><span>points
+</span><span>                             [(</span><span style="color:#d08770;">0</span><span>) </span><span style="color:#a3be8c;">&quot;love&quot;</span><span>] [(</span><span style="color:#d08770;">1</span><span>) </span><span style="color:#a3be8c;">&quot;fifteen&quot;</span><span>]
+</span><span>                             [(</span><span style="color:#d08770;">2</span><span>) </span><span style="color:#a3be8c;">&quot;thirty&quot;</span><span>] [(</span><span style="color:#d08770;">3</span><span>) </span><span style="color:#a3be8c;">&quot;forty&quot;</span><span>]))
+</span><span>         &#39;(</span><span style="color:#d08770;">0 2</span><span>)
+</span><span>&gt; (</span><span style="color:#b48ead;">require </span><span>&#39;src-file)
+</span><span>&#39;(</span><span style="color:#a3be8c;">&quot;love&quot; &quot;thirty&quot;</span><span>)
+</span></code></pre>
+<p>这样, 我们就可以用 <code>function</code> 创建一个函数, 而不是使用 <code>lambda</code> .
+作为module language导入的包与普通的包又略有不同,
+它还需要提供一些额外的项目:</p>
+<ul>
+<li><code>#%module-begin</code>, 包裹了模块代码的隐式语句. 后面会用到.</li>
+<li><code>#%app</code>, 调用一个过程, <code>(func arg1 arg2)</code> 就是
+<code>(#%app func arg1 arg2)</code>.</li>
+<li><code>#%top</code>, <code>(#%top . id)</code>, 返回顶层的变量, 如果有本地绑定则报错.</li>
+<li><code>#%datum</code>, 创建一个字面量.</li>
+</ul>
+<p>这些项目都可以在代码中显式地使用, 但它们最主要的用处还是为 module
+language 提供了修改这些隐式调用的能力.
+比如说在一门定制的lambda运算语言中限制函数只能有一个参数:</p>
+<pre data-lang="racket" style="background-color:#2b303b;color:#c0c5ce;" class="language-racket "><code class="language-racket" data-lang="racket"><span>&gt; (</span><span style="color:#b48ead;">module </span><span>lambda-calculus racket
+</span><span>  (</span><span style="color:#b48ead;">provide </span><span>(rename-out [</span><span style="color:#d08770;">1</span><span>-arg-lambda lambda]
+</span><span>                       [</span><span style="color:#d08770;">1</span><span>-arg-app #%app]
+</span><span>                       [</span><span style="color:#d08770;">1</span><span>-form-module-begin #%module-begin]
+</span><span>                       [no-literals #%datum]
+</span><span>                       [unbound-as-quoted #%top]))
+</span><span>  (</span><span style="color:#b48ead;">define-syntax-rule </span><span>(</span><span style="color:#d08770;">1</span><span>-arg-lambda (x) expr)
+</span><span>    (</span><span style="color:#b48ead;">lambda </span><span>(x) expr))
+</span><span>  (</span><span style="color:#b48ead;">define-syntax-rule </span><span>(</span><span style="color:#d08770;">1</span><span>-arg-app e1 e2)
+</span><span>    (</span><span style="color:#b48ead;">#%app </span><span>e1 e2))
+</span><span>  (</span><span style="color:#b48ead;">define-syntax-rule </span><span>(</span><span style="color:#d08770;">1</span><span>-form-module-begin e)
+</span><span>    (#%module-begin e))
+</span><span>  (</span><span style="color:#b48ead;">define-syntax </span><span>(no-literals stx)
+</span><span>    (raise-syntax-error </span><span style="color:#d08770;">#f</span><span> &quot;no&quot; stx))
+</span><span>  (</span><span style="color:#b48ead;">define-syntax-rule </span><span>(unbound-as-quoted . id)
+</span><span>    &#39;id))
+</span><span>&gt; (</span><span style="color:#b48ead;">module </span><span>ok &#39;lambda-calculus
+</span><span>    ((</span><span style="color:#b48ead;">lambda </span><span>(x) (x z))
+</span><span>     (</span><span style="color:#b48ead;">lambda </span><span>(y) y)))
+</span><span>&gt; (</span><span style="color:#b48ead;">require </span><span>&#39;ok)
+</span><span>
+</span><span>&#39;z
+</span><span>&gt; (</span><span style="color:#b48ead;">module </span><span>not-ok &#39;lambda-calculus
+</span><span>    (</span><span style="color:#b48ead;">lambda </span><span>(x y) x))
+</span><span>
+</span><span>eval:</span><span style="color:#d08770;">4</span><span>:</span><span style="color:#d08770;">0</span><span>: lambda: use does </span><span style="color:#b48ead;">not </span><span>match pattern: (</span><span style="color:#b48ead;">lambda </span><span>(x)
+</span><span>
+</span><span>expr)
+</span><span>
+</span><span>  in: (</span><span style="color:#b48ead;">lambda </span><span>(x y) x)
+</span><span>&gt; (</span><span style="color:#b48ead;">module </span><span>not-ok &#39;lambda-calculus
+</span><span>    (</span><span style="color:#b48ead;">lambda </span><span>(x) x)
+</span><span>    (</span><span style="color:#b48ead;">lambda </span><span>(y) (y y)))
+</span><span>
+</span><span>eval:</span><span style="color:#d08770;">5</span><span>:</span><span style="color:#d08770;">0</span><span>: #%module-begin: use does </span><span style="color:#b48ead;">not </span><span>match pattern:
+</span><span>
+</span><span>(#%module-begin e)
+</span><span>
+</span><span>  in: (#%module-begin (</span><span style="color:#b48ead;">lambda </span><span>(x) x) (</span><span style="color:#b48ead;">lambda </span><span>(y) (y y)))
+</span><span>&gt; (</span><span style="color:#b48ead;">module </span><span>not-ok &#39;lambda-calculus
+</span><span>    (</span><span style="color:#b48ead;">lambda </span><span>(x) (x x x)))
+</span><span>
+</span><span>eval:</span><span style="color:#d08770;">6</span><span>:</span><span style="color:#d08770;">0</span><span>: #%app: use does </span><span style="color:#b48ead;">not </span><span>match pattern: (</span><span style="color:#b48ead;">#%app </span><span>e1 e2)
+</span><span>
+</span><span>  in: (</span><span style="color:#b48ead;">#%app </span><span>x x x)
+</span><span>&gt; (</span><span style="color:#b48ead;">module </span><span>not-ok &#39;lambda-calculus
+</span><span>    </span><span style="color:#d08770;">10</span><span>)
+</span><span>
+</span><span>eval:</span><span style="color:#d08770;">7</span><span>:</span><span style="color:#d08770;">0</span><span>: #%datum: no
+</span><span>
+</span><span>in: (</span><span style="color:#b48ead;">#%datum </span><span>. </span><span style="color:#d08770;">10</span><span>)
+</span></code></pre>
+<p>上面的例子都重复导出了 Racket 的内容, 或者直接使用了 Racket,
+并没有直接使用 <code>#lang xxx</code>. 一门完整的 module language, 还需要提供
+reader 来解析源文件. 一份 Racket 源文件(或者其他由 Racket
+定制而来的语言)的处理过程如下:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>surface syntax --|reader|-&gt; AST --|macro expansion|--&gt; coreforms
+</span></code></pre>
+<p>另外, module language 还可以用 <code>read</code> , <code>read-syntax</code> 自定义解析器逻辑.
+看上去完全实现一门 module language 是有些困难的. Racket 提供了 <code>s-exp</code>
+元语言来简化这些流程. 可以像其他 module language 一样使用:
+<code>#lang s-exp module-path</code> . 它读入后面的 s-expression 并用 <em>module path</em>
+展开.</p>
+<p>这些 Racket 的基础设施为我们的语言定制提供了帮手.
+上面的内容如果没有完全理解也不用着急. 后文中遇到相关内容时会做详细解释.</p>
+<h1 id="brainfuck-yu-fa">brainfuck 语法</h1>
+<p>之所以选择 brainfuck 作为示例, 是因为它的语法足够简单,
+我们不用操心解析器的复杂度, 也能完全实现整个流程. 完整的 brainfuck
+语法只使用了8种符号用来操作 brainfuck 机器:</p>
+<ul>
+<li><code>&gt;</code> , 向后移动指针</li>
+<li><code>&lt;</code> , 向前移动指针</li>
+<li><code>+</code> , 指针所指字节 + 1</li>
+<li><code>-</code> , 指针所指字节 - 1</li>
+<li><code>,</code> , 从标准输入读入一个字节并写入指针</li>
+<li><code>.</code> , 向标准输出写入指针所指的一个字节</li>
+<li><code>[ ... ]</code> , 循环, 当运行到 <code>]</code> 时若指针指向的字节为0则跳出</li>
+</ul>
+<p>brainfuck 机器由一条长度为30000 byte 的数据与一个指针构成.</p>
+<h1 id="shi-xian-brainfuck-yu-yi">实现 brainfuck 语义</h1>
+<p>在这个章节我们需要实现 brainfuck 各种符号的语义. 在此之前, 我们需要实现
+brainfuck 机器的定义:</p>
+<pre data-lang="racket" style="background-color:#2b303b;color:#c0c5ce;" class="language-racket "><code class="language-racket" data-lang="racket"><span>(</span><span style="color:#b48ead;">define-struct </span><span>state (data ptr) #:mutable)
+</span><span>
+</span><span>(</span><span style="color:#b48ead;">define</span><span> (</span><span style="color:#8fa1b3;">new-state</span><span>)
+</span><span>  (state (make-vector </span><span style="color:#d08770;">30000 0</span><span>) </span><span style="color:#d08770;">0</span><span>))
+</span></code></pre>
+<p><code>define-struct</code> 宏为 <code>state</code> 生成了默认的构造函数 <code>state</code>
+和访问成员的函数 <code>state-*</code> . 我们需要修改虚拟机的状态, 所以需要添加
+<code>#:mutable</code> 关键字, 让宏为我们生成 <code>set-state-*!</code> 函数.
+最后我们定义了一个无参函数 <code>new-state</code> 用于创建 brainfuck 虚拟机.</p>
+<p>有了虚拟机状态定义, 实现除了循环外的语义是十分简单的工作.</p>
+<pre data-lang="racket" style="background-color:#2b303b;color:#c0c5ce;" class="language-racket "><code class="language-racket" data-lang="racket"><span>(</span><span style="color:#b48ead;">define</span><span> (</span><span style="color:#8fa1b3;">increment-ptr </span><span>a-state)
+</span><span>  (set-state-ptr! a-state (add1 (state-ptr a-state))))
+</span><span>
+</span><span>(</span><span style="color:#b48ead;">define</span><span> (</span><span style="color:#8fa1b3;">decrement-ptr </span><span>a-state)
+</span><span>  (set-state-ptr! a-state (sub1 (state-ptr a-state))))
+</span><span>
+</span><span>(</span><span style="color:#b48ead;">define</span><span> (</span><span style="color:#8fa1b3;">increment-byte </span><span>a-state)
+</span><span>  (</span><span style="color:#b48ead;">let </span><span>([v (state-data a-state)] [i (state-ptr a-state)])
+</span><span>    (vector-set! v i (add1 (vector-ref v i)))))
+</span><span>
+</span><span>(</span><span style="color:#b48ead;">define</span><span> (</span><span style="color:#8fa1b3;">decrement-byte </span><span>a-state)
+</span><span>  (</span><span style="color:#b48ead;">let </span><span>([v (state-data a-state)] [i (state-ptr a-state)])
+</span><span>    (vector-set! v i (sub1 (vector-ref v i)))))
+</span><span>
+</span><span>(</span><span style="color:#b48ead;">define</span><span> (</span><span style="color:#8fa1b3;">write-byte-to-stdout </span><span>a-state)
+</span><span>  (</span><span style="color:#b48ead;">let </span><span>([v (state-data a-state)] [i (state-ptr a-state)])
+</span><span>    (write-byte (vector-ref v i) (current-output-port))))
+</span><span>
+</span><span>(</span><span style="color:#b48ead;">define</span><span> (</span><span style="color:#8fa1b3;">read-byte-from-stdin </span><span>a-state)
+</span><span>  (</span><span style="color:#b48ead;">let </span><span>([v (state-data a-state)] [i (state-ptr a-state)])
+</span><span>    (vector-set! v i (read-byte (current-input-port)))))
+</span></code></pre>
+<p><code>current-*-port</code> 是一个 Racket 中的 parameter,
+我们需要使用函数调用才能获取端口的值. Parameter 的值可以通过
+<code>parameterize</code> 指定某个 scope 中的 parameter 值. (后面也会用到
+parameter)</p>
+<p>与其他语法符号不同, 我们需要使用宏来实现循环. 至于原因,
+我们先看循环的实现:</p>
+<pre data-lang="racket" style="background-color:#2b303b;color:#c0c5ce;" class="language-racket "><code class="language-racket" data-lang="racket"><span>(</span><span style="color:#b48ead;">define-syntax-rule </span><span>(loop a-state body ...)
+</span><span>  (</span><span style="color:#b48ead;">local </span><span>[(</span><span style="color:#b48ead;">define</span><span> (</span><span style="color:#8fa1b3;">loop</span><span>)
+</span><span>            (</span><span style="color:#b48ead;">unless </span><span>(= (vector-ref (state-data a-state) (state-ptr a-state)) </span><span style="color:#d08770;">0</span><span>)
+</span><span>              body ...
+</span><span>              (loop)))]
+</span><span>    (loop)))
+</span></code></pre>
+<p>当符合条件时, 执行 body 并进行一次尾递归. 如果我们将这个宏定义为函数,
+含义就发生了变化: 因为 Racket 是严格求值(strict)的, 在 &quot;展开&quot; 函数之前,
+body 的值已经计算出来了, 实际上循环的 body 只执行了一遍.</p>
+<p>严格求值的反面就是非严格求值. 其中的典型就是 Haskel,
+执行函数并不一定需要计算出参数的值, 计算是 lazy 的. 比如像下面这个函数:</p>
+<pre data-lang="haskel" style="background-color:#2b303b;color:#c0c5ce;" class="language-haskel "><code class="language-haskel" data-lang="haskel"><span>-- non_strict :: Num b =&gt; a -&gt; b
+</span><span>&gt; non_strict a = 1
+</span><span>
+</span><span>&gt; bot = bot
+</span><span>
+</span><span>&gt; non_strict bot
+</span><span>1
+</span></code></pre>
+<p><code>bot</code> 是一个无法计算的值, 但是我们仍可以计算出 <code>non_strict bot</code> 的值,
+因为返回值实际上是与参数无关的, 如果是一门严格求值的语言,
+这里已经陷入死循环了.</p>
+<p>似乎我们已经离题了. 在完成这个章节前, 我们需要在源文件最前面加上 <code>#lang</code>
+和导出其他模块需要的定义.</p>
+<pre data-lang="racket" style="background-color:#2b303b;color:#c0c5ce;" class="language-racket "><code class="language-racket" data-lang="racket"><span>#lang racket
+</span><span>
+</span><span>(</span><span style="color:#b48ead;">provide </span><span>(all-defined-out))
+</span><span>
+</span><span style="color:#65737e;">;; out code begins
+</span><span>...
+</span></code></pre>
+<h1 id="expand-level">Expand level</h1>
+<p>在这个章节我们会将 brainfuck 的 s-expression 形式转换为真正的 Racket
+代码来执行. 我们在 Intro 中提到的 brainfuck 代码可以用如下的 s-exp
+来表示:</p>
+<pre data-lang="racket" style="background-color:#2b303b;color:#c0c5ce;" class="language-racket "><code class="language-racket" data-lang="racket"><span>(plus)(plus)(plus)(plus)(plus) (plus)(plus)(plus)(plus)(plus)
+</span><span>(brackets
+</span><span> (greater-than) (plus)(plus)(plus)(plus)(plus) (plus)(plus)
+</span><span> (greater-than) (plus)(plus)(plus)(plus)(plus) (plus)(plus)
+</span><span> (plus)(plus)(plus) (greater-than) (plus)(plus)(plus)
+</span><span> (greater-than) (plus) (less-than)(less-than)(less-than)
+</span><span> (less-than) (minus))
+</span><span>(greater-than) (plus)(plus) (period)
+</span><span>(greater-than) (plus) (period)
+</span><span>(plus)(plus)(plus)(plus)(plus) (plus)(plus) (period)
+</span><span>(period) (plus)(plus)(plus) (period)
+</span><span>(greater-than) (plus)(plus) (period)
+</span><span>(less-than)(less-than) (plus)(plus)(plus)(plus)(plus)
+</span><span>(plus)(plus)(plus)(plus)(plus) (plus)(plus)(plus)(plus)(plus)
+</span><span>(period) (greater-than) (period)
+</span><span>(plus)(plus)(plus) (period)
+</span><span>(minus)(minus)(minus)(minus)(minus)(minus)(period)
+</span><span>(minus)(minus)(minus)(minus)(minus)(minus)(minus)(minus)
+</span><span>(period)(greater-than) (plus) (period) (greater-than) (period)
+</span></code></pre>
+<p>需要做的就是将这些节点展开为真实的代码, 直接定义宏就行了.</p>
+<pre data-lang="racket" style="background-color:#2b303b;color:#c0c5ce;" class="language-racket "><code class="language-racket" data-lang="racket"><span>(</span><span style="color:#b48ead;">define </span><span>current-state (make-parameter (new-state)))
+</span><span>
+</span><span>(</span><span style="color:#b48ead;">define-syntax-rule </span><span>(greater-than)
+</span><span>                    (increment-ptr (current-state)))
+</span><span>
+</span><span>(</span><span style="color:#b48ead;">define-syntax-rule </span><span>(less-than)
+</span><span>                    (decrement-ptr (current-state)))
+</span><span>
+</span><span>(</span><span style="color:#b48ead;">define-syntax-rule </span><span>(plus)
+</span><span>                    (increment-byte (current-state)))
+</span><span>
+</span><span>(</span><span style="color:#b48ead;">define-syntax-rule </span><span>(minus)
+</span><span>                    (decrement-byte (current-state)))
+</span><span>
+</span><span>(</span><span style="color:#b48ead;">define-syntax-rule </span><span>(period)
+</span><span>                    (write-byte-to-stdout (current-state)))
+</span><span>
+</span><span>(</span><span style="color:#b48ead;">define-syntax-rule </span><span>(comma)
+</span><span>                    (read-byte-from-stdin (current-state)))
+</span><span>
+</span><span>(</span><span style="color:#b48ead;">define-syntax-rule </span><span>(brackets body ...)
+</span><span>                    (loop (current-state) body ...))
+</span></code></pre>
+<p>这里的 <code>current-state</code> 就是一个 <code>parameter</code>. 如果我们运行了多个
+brainfuck 代码, 我们是不希望多个代码间互相干扰的. 也就是说, 每一个
+brainfuck module 需要有一个自己的 state.
+显然我们的实现会让所有的代码使用相同的 <code>current-state</code> .
+为了解决这个问题, 我们可以使用前文提到的 <code>#%module-begin</code> 和
+<code>parameterize</code>, 在每一个 brainfuck module 隐式插入 <code>parameterize</code> ,
+保证每一个 module 的 state 相互隔离.</p>
+<pre data-lang="racket" style="background-color:#2b303b;color:#c0c5ce;" class="language-racket "><code class="language-racket" data-lang="racket"><span>(</span><span style="color:#b48ead;">define-syntax-rule </span><span>(bf-module-begin body ...)
+</span><span>  (#%plain-module-begin
+</span><span>    (parameterize ([current-state (new-state)])
+</span><span>      body ...)))
+</span></code></pre>
+<p>这样, 一个模块的代码被完全包裹在了 <code>parameterize</code> 的 scope 中,
+无需再担心多个模块互相干扰了.</p>
+<p>我们并不需要定制函数调用等等, 所以就不用管其他三个了.
+不要忘了导入之前的定义和导出.</p>
+<pre data-lang="racket" style="background-color:#2b303b;color:#c0c5ce;" class="language-racket "><code class="language-racket" data-lang="racket"><span>#lang racket
+</span><span>(</span><span style="color:#b48ead;">require </span><span>&quot;semantics.rkt&quot;) </span><span style="color:#65737e;">;; 我们之前写的语义部分
+</span><span>(</span><span style="color:#b48ead;">provide </span><span>greater-than
+</span><span>         less-than
+</span><span>         plus
+</span><span>         minus
+</span><span>         period
+</span><span>         comma
+</span><span>         brackets
+</span><span>         (rename-out [bf-module-begin #%module-begin]))
+</span><span>
+</span><span style="color:#65737e;">;; our code begins
+</span><span>...
+</span></code></pre>
+<p>我们使用 Racket 提供的元语言 <code>#lang s-exp &quot;language.rkt&quot;</code> 并用
+language.rkt 进行展开就可以运行这些 s-expressions 了.</p>
+<h1 id="reader">Reader</h1>
+<h2 id="shi-xian-parser">实现 Parser</h2>
+<p>前面我们已经可以执行生成的 s-exp 了, 我们现在来考虑如何将 brainfuck
+代码转换为 s-exp.</p>
+<p>Racket 中使用 <a href="https://docs.racket-lang.org/guide/stx-obj.html#%28tech._identifier._syntax._object%29">syntax
+object</a>
+来表示语法对象. 其实 syntax object 就是 s-exp ,
+不过附加了对象在文件中的位置信息, 以及其他的信息. 我们可以使用
+<code>datum-&gt;syntax</code> 来将 s-exp 转换为 syntax object.</p>
+<p>Racket 本身提供了一个递归下降 (recursive descent) 的解析器, 可以通过
+<code>readtable</code> 进行扩展. 但是 brainfuck 不需要太多的语法解析,
+所以我们自己手写一个也问题不大.</p>
+<pre data-lang="racket" style="background-color:#2b303b;color:#c0c5ce;" class="language-racket "><code class="language-racket" data-lang="racket"><span>#lang racket
+</span><span>
+</span><span>(</span><span style="color:#b48ead;">provide </span><span>parse-expr)
+</span><span>
+</span><span>(</span><span style="color:#b48ead;">define</span><span> (</span><span style="color:#8fa1b3;">parse-expr </span><span>src in)
+</span><span>  </span><span style="color:#65737e;">;; Find out where we are now
+</span><span>  (</span><span style="color:#b48ead;">define-values </span><span>(line column position) (port-next-location in))
+</span><span>  </span><span style="color:#65737e;">;; Read the next char
+</span><span>  (</span><span style="color:#b48ead;">define </span><span>next-char (read-char in))
+</span><span>
+</span><span>  </span><span style="color:#65737e;">;; Wrap raw s-exp as syntax object
+</span><span>  (</span><span style="color:#b48ead;">define</span><span> (</span><span style="color:#8fa1b3;">decorate </span><span>sexp span)
+</span><span>    (datum-&gt;syntax </span><span style="color:#d08770;">#f</span><span> sexp (list src line column position span)))
+</span><span>
+</span><span>  (</span><span style="color:#b48ead;">cond
+</span><span>    [(eof-object? next-char) eof]
+</span><span>    [else
+</span><span>      (</span><span style="color:#b48ead;">case </span><span>next-char
+</span><span>        </span><span style="color:#65737e;">;; Generate s-expression
+</span><span>        [(#\&gt;) (decorate &#39;(greater-than) </span><span style="color:#d08770;">1</span><span>)]
+</span><span>        [(#\&lt;) (decorate &#39;(less-than) </span><span style="color:#d08770;">1</span><span>)]
+</span><span>        [(</span><span style="color:#d08770;">#\+</span><span>) (decorate &#39;(plus) </span><span style="color:#d08770;">1</span><span>)]
+</span><span>        [(</span><span style="color:#d08770;">#\-</span><span>) (decorate &#39;(minus) </span><span style="color:#d08770;">1</span><span>)]
+</span><span>        [(#\,) (decorate &#39;(comma) </span><span style="color:#d08770;">1</span><span>)]
+</span><span>        [(</span><span style="color:#d08770;">#\.</span><span>) (decorate &#39;(period) </span><span style="color:#d08770;">1</span><span>)]
+</span><span>
+</span><span>        </span><span style="color:#65737e;">;; Recursive descent
+</span><span>        </span><span style="color:#65737e;">;; Find out all s-exps in brackets
+</span><span>        [(#\[)
+</span><span>         (</span><span style="color:#b48ead;">define </span><span>elements (parse-exprs src in))
+</span><span>         (</span><span style="color:#b48ead;">define-values </span><span>(l c tail-position) (port-next-location in))
+</span><span>         (decorate `(brackets ,@elements)
+</span><span>                   (- tail-position position))]
+</span><span>
+</span><span>        [else (parse-expr src in)])]))
+</span><span>
+</span><span style="color:#65737e;">;; parse [ ... ]
+</span><span>(</span><span style="color:#b48ead;">define</span><span> (</span><span style="color:#8fa1b3;">parse-exprs </span><span>source-name in)
+</span><span>  (</span><span style="color:#b48ead;">define </span><span>peeked-char (peek-char in))
+</span><span>  (</span><span style="color:#b48ead;">cond
+</span><span>    [(eof-object? peeked-char)
+</span><span>     (</span><span style="color:#b48ead;">error </span><span>&#39;parse-exprs </span><span style="color:#a3be8c;">&quot;Expected ], but read eof&quot;</span><span>)]
+</span><span>    [(char=? peeked-char #\])
+</span><span>     (read-char in)
+</span><span>     empty]
+</span><span>    [(member peeked-char (list #\&lt; #\&gt; </span><span style="color:#d08770;">#\+ #\-</span><span> #\, </span><span style="color:#d08770;">#\.</span><span> #\[))
+</span><span>     (cons (parse-expr source-name in)
+</span><span>           (parse-exprs source-name in))]
+</span><span>    [else
+</span><span>      (read-char in)
+</span><span>      (parse-exprs source-name in)]))
+</span></code></pre>
+<p>用于解析 <code>[ ... ]</code> 的 <code>parse-exprs</code> 使用了尾递归. <code>cons</code>
+的作用就是将当前的解析到的符号和之后尾递归解析到的符号连接在一起,
+作为一个整体返回. 可以当作这样的伪代码:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>while xxx {
+</span><span>  // 计算出当前的语法树节点
+</span><span>  ast.push_back(node)
+</span><span>}
+</span><span>
+</span><span>return ast
+</span></code></pre>
+<h2 id="zai-brainfuck-zhong-jia-ru-jie-xi-qi">在 brainfuck 中加入解析器</h2>
+<p>将我们实现的 parser 作为 module language 的解析器, 然后再用之前的 expand
+level 代码就可以运行了 brainfuck 代码了. 幸运的是, Racket 为我们提供了
+<code>#lang s-exp syntax/module-reader</code> , 我们可以在这个文件中指定用于 expand
+level 的代码和使用的 <code>read</code> 和 <code>read-syntax</code> .</p>
+<pre data-lang="racket" style="background-color:#2b303b;color:#c0c5ce;" class="language-racket "><code class="language-racket" data-lang="racket"><span>#lang s-exp syntax/module-reader
+</span><span>bf/language
+</span><span>
+</span><span>#:read my-read
+</span><span>#:read-syntax my-read-syntax
+</span><span>
+</span><span>(</span><span style="color:#b48ead;">require </span><span>&quot;../parser.rkt&quot;)
+</span><span>
+</span><span>(</span><span style="color:#b48ead;">define</span><span> (</span><span style="color:#8fa1b3;">my-read </span><span>in)
+</span><span>  (syntax-&gt;datum (my-read-syntax </span><span style="color:#d08770;">#f</span><span> in)))
+</span><span>
+</span><span>(</span><span style="color:#b48ead;">define</span><span> (</span><span style="color:#8fa1b3;">my-read-syntax </span><span>src in)
+</span><span>  (parse-expr src in))
+</span></code></pre>
+<p>第二行指出了 expand level 的模块. 因为语法限制, 这里只能使用字母, 括号,
+下划线等等, 并不能使用双引号来引用文件路径,
+所以我们必须安装我们的这个包, 使用
+<code>$ raco pkg install --link path/to/bf</code> 安装本地包, 这里的 <code>language</code>
+即指我们之前写的 expand 代码. 然后我们 <code>require</code> 这个文件,
+就可以调用我们自己的parser 和 expander 来执行代码了.</p>
+<h2 id="hello-world">Hello world!</h2>
+<p>为了能够在源文件开头使用 <code>#lang bf</code> 指定语言, 我们需要将这个文件放到
+<code>path/to/bf/reader.rkt</code> 处, 这样 Racket 就可以找到我们的语言了.
+现在我们可以成功运行 *Intro 的代码了. Hello World!</p>
+<h1 id="jie-yu">结语</h1>
+<p>虽然 Racket 是一门 JIT 语言, 但是我们在这里实现的 brainfuck
+的效率还有很大的提升空间(如何优化可以参考 brainfudge,
+本文主要的参考来源). 之前学习了 Scheme 和 Racket , 总想写点什么. 在读到
+Racket Guide 第十七章后便决定写一个基于 Racket 的语言, 最后决定为
+brainfuck. 参照教程磕磕碰碰写完后, 这让我再一次领略到了 Lisp 的魅力
+(第一次是完全尝试用递归实现了算法题). 之后准备看看 <em>Hackers &amp; Painters</em>
+.</p>
+<h1 id="can-kao">参考</h1>
+<p><a href="https://docs.racket-lang.org/guide/languages.html">The Racket Guide :: Creating
+Languages</a></p>
+<p><a href="https://github.com/dyoo/brainfudge">brainfudge</a></p>
+<p>学习 Racket 可以参考</p>
+<p><a href="https://docs.racket-lang.org/guide/index.html">The Racket Guide</a></p>
+<p><a href="http://songjinghe.github.io/TYS-zh-translation/">Teach Yourself Scheme in Fixnum Days
+中译</a></p>
+
+
+         </main>
+
+         <footer>
+            
+<p class="tagsData">
+
+</p>
+
+            <hr>
+            <div class=footContainer>
+               <div class="footLeft">
+                  <p>Licensed under <a target="_blank" rel="noopener noreferrer" href="https://fr.wikipedia.org/wiki/Licence_MIT">MIT</a><br>
+                     Built with <a target="_blank" rel="noopener noreferrer" href="https://www.getzola.org">Zola</a> using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> theme &amp; <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/veqev">veqev</a> colors.<br>
+                  </p>
+               </div>
+               <div class="footRight">
+                  <!-- Size 46x46 -->
+                  <img class="footGif noStyle" loading="lazy" src="https://i.ibb.co/XYDpfcs/foot.gif" alt="footGif">
+                  <a class="metaData" target="_blank" rel="noopener noreferrer" href="https://refrigerator.navihx.top/atom.xml" title="Subscribe via RSS for updates.">RSS</a>
+               </div>
+            </div>
+         </footer>
+      </div>
+   </body>
+</html>
