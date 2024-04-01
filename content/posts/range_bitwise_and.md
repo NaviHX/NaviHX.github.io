@@ -1,6 +1,6 @@
 +++
 title = "Range Bitwise-And"
-date = "2024-03-09"
+date = "2024-04-01"
 tags = ["dev"]
 categories = ["dev"]
 +++
