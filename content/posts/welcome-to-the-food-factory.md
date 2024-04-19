@@ -1,3 +1,10 @@
++++
+title = "Welcome to the Food Factory"
+date = "2024-04-19"
+tags = ["dev"]
+categories = ["dev"]
++++
+
 # Welcome to the Food Factory!
 
 这是一篇介绍 [工厂模式](https://zh.wikipedia.org/wiki/%E5%B7%A5%E5%8E%82%E6%96%B9%E6%B3%95) 的短文。
