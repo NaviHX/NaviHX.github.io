@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+      <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+      <meta name="robots" content="index, follow">
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <title>Range Bitwise-And</title>
+      
+      
+      
+      <meta name="title" content="Range Bitwise-And">
+      
+      
+      
+      <meta property="og:type" content="website">
+      <meta property="og:url" content="https://refrigerator.navihx.top/posts/range-bitwise-and/">
+      
+      <meta property="og:site_name" content="">
+      
+      
+      <meta property="og:title" content="Range Bitwise-And">
+      
+      
+      
+      <meta property="og:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://refrigerator.navihx.top/posts/range-bitwise-and/">
+      
+      <meta property="twitter:title" content="Range Bitwise-And">
+      
+      
+      
+      <meta property="twitter:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      <link rel="canonical" href="https://refrigerator.navihx.top/posts/range-bitwise-and/">
+      
+      <link rel="shortcut icon" type="image/x-icon" href="https://refrigerator.navihx.top/favicon.ico">
+      
+      
+      
+      
+      <link rel="alternate" type="application/atom+xml" title="RSS" href="https://refrigerator.navihx.top/atom.xml">
+      
+      
+      
+      <link rel="stylesheet" href="https://refrigerator.navihx.top/css/style.css"/>
+      
+   </head>
+   <body>
+      <div class="wrapper">
+         <header>
+            
+            <nav class="navBar">
+               
+               
+               
+               <a href="/" >&#x2F;home&#x2F;</a>
+               
+               
+               
+               
+               <a href="/posts" >&#x2F;posts&#x2F;</a>
+               
+               
+
+               <div class="themeSwitch">
+                  <button class="themeButton light" onclick="setTheme('light')" title="Light mode">◐</button>
+                  <button class="themeButton dark" onclick="setTheme('dark')" title="Dark mode">◑</button>
+               </div>
+            </nav>
+            
+
+            <script>
+               const setTheme = (theme) => {
+                   document.documentElement.className = theme;
+                   localStorage.setItem('theme', theme);
+               }
+               const getTheme = () => {
+                   const theme = localStorage.getItem('theme');
+                   theme && setTheme(theme);
+               }
+               getTheme()
+            </script>
+         </header>
+
+         <main>
+            
+
+
+
+
+<h1 id="shu-zi-fan-wei-an-wei-yu">数字范围按位与</h1>
+<p>给你两个整数 left 和 right ，表示区间 [left, right] ，返回此区间内所有数字 <em>按位与</em> 的结果（包含 left 、right 端点）。</p>
+<h1 id="solution">Solution</h1>
+<p>注意到按位与的特性：只要参与按位与的所有数中，有一个数在某一位为零，那么结果的这一位肯定为零。</p>
+<p>同时我们可以发现在连续出现的数中，第 i 位的数是 0 与 1 交替出现的，交替出现的周期为 2^(i+1) ，也就是说，最长会连续出现 2^i 个 1 。因此我们只需要知道两个端点处第 i 位是否为 1，同时两个端点的距离 dis 是否超过半个周期，就能判断结果中第 i 位是否为一。结果的第 i 位可以通过下面的公式计算：</p>
+<pre data-lang="haskell" style="background-color:#2b303b;color:#c0c5ce;" class="language-haskell "><code class="language-haskell" data-lang="haskell"><span>mask i = shiftL </span><span style="color:#d08770;">1</span><span> i
+</span><span>ans left right i = (left .&amp;. mask i) .&amp;. (right .&amp;. mask i) .&amp;. </span><span style="color:#b48ead;">if</span><span> (right - left) &lt; mask i </span><span style="color:#b48ead;">then </span><span style="color:#d08770;">0xffffffff </span><span style="color:#b48ead;">else </span><span style="color:#d08770;">0
+</span></code></pre>
+<p>对应的 Rust 代码是</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">range_bitwise_and</span><span>(</span><span style="color:#bf616a;">left</span><span>: </span><span style="color:#b48ead;">i32</span><span>, </span><span style="color:#bf616a;">right</span><span>: </span><span style="color:#b48ead;">i32</span><span>) -&gt; </span><span style="color:#b48ead;">i32 </span><span>{
+</span><span>    </span><span style="color:#b48ead;">let</span><span> dis = right - left;
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">let mut</span><span> ans = </span><span style="color:#d08770;">0</span><span>;
+</span><span>    </span><span style="color:#b48ead;">for</span><span> i in </span><span style="color:#d08770;">0</span><span>..</span><span style="color:#d08770;">31 </span><span>{
+</span><span>        </span><span style="color:#b48ead;">let</span><span> m = </span><span style="color:#d08770;">1 </span><span>&lt;&lt; i;
+</span><span>        ans |= left &amp; right &amp; m &amp; </span><span style="color:#b48ead;">if</span><span> dis &lt; m { !</span><span style="color:#d08770;">0 </span><span>} </span><span style="color:#b48ead;">else </span><span>{ </span><span style="color:#d08770;">0 </span><span>}
+</span><span>    }
+</span><span>
+</span><span>    ans
+</span><span>}
+</span></code></pre>
+<p>观察第二个式子我们可以发现， (dis\ &lt;\ mask) 是关于 i 单调递增的，即存在一个 a 使得 i &gt;= a, dis &gt;= mask 且 i &lt; a, dis &lt; mask 。那么我们只需要找出最小的满足条件的 i ，就可以知道该位以及更高的位的掩码都是 1 。</p>
+<p>现在我们需要找到一个方法求到每一位的掩码组合在一起的掩码，这样就可以同时计算所有位了。方法是很简单的：将 dis 最高的 1 以下的位全部置为 1 ，然后按位取反。这样就可以保证，只保留最低的 1 ，掩码也是大于 dis 的。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">range_bitwise_and</span><span>(</span><span style="color:#bf616a;">left</span><span>: </span><span style="color:#b48ead;">i32</span><span>, </span><span style="color:#bf616a;">right</span><span>: </span><span style="color:#b48ead;">i32</span><span>) -&gt; </span><span style="color:#b48ead;">i32 </span><span>{
+</span><span>    </span><span style="color:#b48ead;">let</span><span> dis = right - left;
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">let mut</span><span> m = dis;
+</span><span>    m = m | (m &gt;&gt; </span><span style="color:#d08770;">1</span><span>);
+</span><span>    m = m | (m &gt;&gt; </span><span style="color:#d08770;">2</span><span>);
+</span><span>    m = m | (m &gt;&gt; </span><span style="color:#d08770;">4</span><span>);
+</span><span>    m = m | (m &gt;&gt; </span><span style="color:#d08770;">8</span><span>);
+</span><span>    m = m | (m &gt;&gt; </span><span style="color:#d08770;">16</span><span>);
+</span><span>    m = !m;
+</span><span>
+</span><span>    left &amp; right &amp; m
+</span><span>}
+</span></code></pre>
+
+
+         </main>
+
+         <footer>
+            
+<p class="tagsData">
+
+</p>
+
+            <hr>
+            <div class=footContainer>
+               <div class="footLeft">
+                  <p>Licensed under <a target="_blank" rel="noopener noreferrer" href="https://fr.wikipedia.org/wiki/Licence_MIT">MIT</a><br>
+                     Built with <a target="_blank" rel="noopener noreferrer" href="https://www.getzola.org">Zola</a> using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> theme &amp; <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/veqev">veqev</a> colors.<br>
+                  </p>
+               </div>
+               <div class="footRight">
+                  <!-- Size 46x46 -->
+                  <img class="footGif noStyle" loading="lazy" src="https://i.ibb.co/XYDpfcs/foot.gif" alt="footGif">
+                  <a class="metaData" target="_blank" rel="noopener noreferrer" href="https://refrigerator.navihx.top/atom.xml" title="Subscribe via RSS for updates.">RSS</a>
+               </div>
+            </div>
+         </footer>
+      </div>
+   </body>
+</html>

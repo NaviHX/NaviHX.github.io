@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+      <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+      <meta name="robots" content="index, follow">
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <title>Exploring Lock-freedom</title>
+      
+      
+      
+      <meta name="title" content="Exploring Lock-freedom">
+      
+      
+      
+      <meta property="og:type" content="website">
+      <meta property="og:url" content="https://refrigerator.navihx.top/posts/lock-free/">
+      
+      <meta property="og:site_name" content="">
+      
+      
+      <meta property="og:title" content="Exploring Lock-freedom">
+      
+      
+      
+      <meta property="og:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://refrigerator.navihx.top/posts/lock-free/">
+      
+      <meta property="twitter:title" content="Exploring Lock-freedom">
+      
+      
+      
+      <meta property="twitter:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      <link rel="canonical" href="https://refrigerator.navihx.top/posts/lock-free/">
+      
+      <link rel="shortcut icon" type="image/x-icon" href="https://refrigerator.navihx.top/favicon.ico">
+      
+      
+      
+      
+      <link rel="alternate" type="application/atom+xml" title="RSS" href="https://refrigerator.navihx.top/atom.xml">
+      
+      
+      
+      <link rel="stylesheet" href="https://refrigerator.navihx.top/css/style.css"/>
+      
+   </head>
+   <body>
+      <div class="wrapper">
+         <header>
+            
+            <nav class="navBar">
+               
+               
+               
+               <a href="/" >&#x2F;home&#x2F;</a>
+               
+               
+               
+               
+               <a href="/posts" >&#x2F;posts&#x2F;</a>
+               
+               
+
+               <div class="themeSwitch">
+                  <button class="themeButton light" onclick="setTheme('light')" title="Light mode">◐</button>
+                  <button class="themeButton dark" onclick="setTheme('dark')" title="Dark mode">◑</button>
+               </div>
+            </nav>
+            
+
+            <script>
+               const setTheme = (theme) => {
+                   document.documentElement.className = theme;
+                   localStorage.setItem('theme', theme);
+               }
+               const getTheme = () => {
+                   const theme = localStorage.getItem('theme');
+                   theme && setTheme(theme);
+               }
+               getTheme()
+            </script>
+         </header>
+
+         <main>
+            
+
+
+
+
+<h1 id="tan-suo-wu-suo">探索无锁</h1>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">struct </span><span>Stack&lt;T&gt; {
+</span><span>    </span><span style="color:#bf616a;">head</span><span>: Option&lt;Box&lt;Node&lt;T&gt;&gt;&gt;,
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">struct </span><span>Node&lt;T&gt; {
+</span><span>    </span><span style="color:#bf616a;">val</span><span>: T,
+</span><span>    </span><span style="color:#bf616a;">next</span><span>: Option&lt;Box&lt;Node&lt;T&gt;&gt;&gt;,
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">impl</span><span>&lt;T&gt; Stack&lt;T&gt; {
+</span><span>    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">new</span><span>() -&gt; </span><span style="color:#b48ead;">Self </span><span>{
+</span><span>        </span><span style="color:#b48ead;">Self </span><span>{ head: None }
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">pop</span><span>(&amp;</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">self</span><span>) -&gt; Option&lt;T&gt; {
+</span><span>        </span><span style="color:#b48ead;">if let </span><span>Some(head) = </span><span style="color:#bf616a;">self</span><span>.head.</span><span style="color:#96b5b4;">take</span><span>() {
+</span><span>            </span><span style="color:#bf616a;">self</span><span>.head = head.next;
+</span><span>            Some(head.val)
+</span><span>        } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>            None
+</span><span>        }
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">push</span><span>(&amp;</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#bf616a;">val</span><span>: T) {
+</span><span>        </span><span style="color:#b48ead;">let mut</span><span> new_head = Box::new(Node { val, next: None });
+</span><span>
+</span><span>        new_head.next = </span><span style="color:#bf616a;">self</span><span>.head;
+</span><span>        </span><span style="color:#bf616a;">self</span><span>.head = Some(new_head);
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>实现一个只用于单线程的栈是非常容易的。如果想在多线程环境中使用这个栈实现，最简单的方法就是使用一个 <code>Mutex</code> ，它可以在多线程环境中提供互斥的可变引用。然而， <code>Rust</code> 内部默认使用的实现为 <code>pthread_mutex</code> ，性能损失比较大。对于性能敏感的环境，我们更倾向于使用无锁的数据结构。（虽然也存在 <a href="https://webkit.org/blog/6161/locking-in-webkit/">parking_log</a> 这类在低竞争环境下性能尚可的锁）</p>
+<h2 id="atomic">Atomic</h2>
+<p>在将这个栈实现修改为无锁版本之前，我们先观察一下单线程环境中的实现。为了弹出栈顶的一个元素，我们需要将栈顶赋值为当前栈顶的下一个元素。为了压入一个元素，我们需要构造一个新元素，并将新元素的 <code>next</code> 指针指向原栈顶，然后将栈顶赋值为新元素。使用不提供互斥访问的容器在多个线程共享同一个栈，这违背了 <code>Rust</code> 的所有权规则，可能会引起 Bug ：当一个线程读取 <code>next</code> 后，重新设置 <code>head</code> 前，可能已经有另一个线程将 <code>head</code> 值进行了修改并释放了内存，重新赋值后造成了 use after free 问题。</p>
+<p>造成这种错误有两个原因：</p>
+<ul>
+<li>线程调度。在更换 <code>head</code> 值的过程中切换到了另外一个线程执行。</li>
+<li>修改扩散。当前线程对值的修改可能还没有扩散到其他核心的缓存中，其他核心可能会读取到以前的值。</li>
+</ul>
+<p>最朴素的想法就是在重新赋值前检查以下 <code>head</code> 是否是原本的值。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let</span><span> head = </span><span style="color:#bf616a;">self</span><span>.head;
+</span><span style="color:#b48ead;">let</span><span> next = head.next;
+</span><span style="color:#65737e;">// The thread may yield CPU here.
+</span><span style="color:#b48ead;">if</span><span> head == </span><span style="color:#bf616a;">self</span><span>.head {
+</span><span>    </span><span style="color:#bf616a;">self</span><span>.head = next;
+</span><span>} </span><span style="color:#b48ead;">else </span><span>{
+</span><span>    </span><span style="color:#65737e;">// Pop failed.
+</span><span>}
+</span></code></pre>
+<p>然而简单的并不是好的，这种做法不能解决问题：在当前线程判断 <code>head</code> 值之后，仍旧可能发生线程调度；同时对缓存的修改也不一定扩散到了其他核心。所以，要想在不使用锁的情况下解决这个问题，解决方案需要满足一下两个必要条件：</p>
+<ul>
+<li>原子性。比较和赋值作为同一个原子指令，其间不可调度。</li>
+<li>内存屏障。修改后其他核心必须知道这个值需要重新加载进入到缓存中。</li>
+</ul>
+<p><a href="https://doc.rust-lang.org/nomicon/atomics.html"><code>Rust</code> 的 <code>Atomic</code> 可以帮助我们实现这两个条件</a>。一个 <code>Atomic*</code> 提供了 <code>compare_and_swap</code> / <code>compare_exchange</code> 方法，可以进行原子地比较和替换。同时作为参数的 <code>Ordering</code> 提供了与其他对内存操作的事件的 <code>happen before</code> 关系进行了抽象（换句话说，提供了类似 <code>fence</code> 指令的功能）。因此，我们可以把栈的实现改成如下这种利用了 <code>Atomic</code> 的形式：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>std::ptr::{</span><span style="color:#bf616a;">self</span><span>, null_mut, NonNull};
+</span><span style="color:#b48ead;">use </span><span>std::sync::atomic::AtomicPtr;
+</span><span style="color:#b48ead;">use </span><span>std::sync::atomic::Ordering::{Acquire, Relaxed, Release};
+</span><span>
+</span><span style="color:#b48ead;">pub struct </span><span>Stack&lt;T&gt; {
+</span><span>    </span><span style="color:#bf616a;">head</span><span>: AtomicPtr&lt;Node&lt;T&gt;&gt;,
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">struct </span><span>Node&lt;T&gt; {
+</span><span>    </span><span style="color:#bf616a;">val</span><span>: T,
+</span><span>    </span><span style="color:#bf616a;">next</span><span>: Option&lt;NonNull&lt;Node&lt;T&gt;&gt;&gt;,
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">impl</span><span>&lt;T&gt; Stack&lt;T&gt; {
+</span><span>    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">new</span><span>() -&gt; Stack&lt;T&gt; {
+</span><span>        Stack {
+</span><span>            head: AtomicPtr::new(</span><span style="color:#96b5b4;">null_mut</span><span>()),
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">impl</span><span>&lt;T&gt; Stack&lt;T&gt; {
+</span><span>    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">pop</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>) -&gt; Option&lt;T&gt; {
+</span><span>        </span><span style="color:#b48ead;">loop </span><span>{
+</span><span>            </span><span style="color:#b48ead;">let</span><span> head = </span><span style="color:#bf616a;">self</span><span>.head.</span><span style="color:#96b5b4;">load</span><span>(Acquire);
+</span><span>
+</span><span>            </span><span style="color:#b48ead;">if</span><span> head == </span><span style="color:#96b5b4;">null_mut</span><span>() {
+</span><span>                </span><span style="color:#b48ead;">return </span><span>None;
+</span><span>            } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>                </span><span style="color:#b48ead;">let</span><span> next = </span><span style="color:#b48ead;">unsafe </span><span>{ (*head).next.</span><span style="color:#96b5b4;">map</span><span>(|</span><span style="color:#bf616a;">n</span><span>| n.</span><span style="color:#96b5b4;">as_ptr</span><span>()).</span><span style="color:#96b5b4;">unwrap_or</span><span>(</span><span style="color:#96b5b4;">null_mut</span><span>()) };
+</span><span>                </span><span style="color:#b48ead;">if </span><span style="color:#bf616a;">self</span><span>.head.</span><span style="color:#96b5b4;">compare_and_swap</span><span>(head, next, Release) == head {
+</span><span>                    </span><span style="color:#b48ead;">return </span><span>Some(</span><span style="color:#b48ead;">unsafe </span><span>{ ptr::read(&amp;(*head).val) });
+</span><span>                }
+</span><span>            }
+</span><span>        }
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">push</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#bf616a;">t</span><span>: T) {
+</span><span>        </span><span style="color:#b48ead;">let</span><span> n = Box::into_raw(Box::new(Node { val: t, next: None }));
+</span><span>        </span><span style="color:#b48ead;">loop </span><span>{
+</span><span>            </span><span style="color:#b48ead;">let</span><span> head = </span><span style="color:#bf616a;">self</span><span>.head.</span><span style="color:#96b5b4;">load</span><span>(Relaxed);
+</span><span>            </span><span style="color:#b48ead;">unsafe </span><span>{
+</span><span>                (*n).next = NonNull::new(head);
+</span><span>            }
+</span><span>            </span><span style="color:#b48ead;">if </span><span style="color:#bf616a;">self</span><span>.head.</span><span style="color:#96b5b4;">compare_and_swap</span><span>(head, n, Release) == head {
+</span><span>                </span><span style="color:#b48ead;">break</span><span>;
+</span><span>            }
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>这个实现提供了内部可变性，所以 <code>push</code> 和 <code>pop</code> 方法现在只需要接受不可变引用。同时，由于在检查到原本的 <code>head</code> 被修改后会先放弃本次修改，随后重新尝试加入或删除元素，所以这个结构是 <code>Sync</code> 的（内部可变性是互斥的）。</p>
+<h2 id="nei-cun-xie-lu">内存泄露</h2>
+<p>如果程序中使用了大量的 <code>push</code> 和 <code>pop</code> 操作，以上的实现会发生内存泄露：因为我们根本没有回收内存。注意到在 <code>pop</code> 的实现中，之前在 <code>push</code> 中利用 <code>Box</code> 分配的内存地址作为 <code>head</code> ，但是在我们丢弃 <code>head</code> 时，并没有将其转换为 <code>Box</code> ，这造成了内存泄露。这是为了正确性有意为之。假设我们在 <code>pop</code> 实现中加入了释放内存的代码。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">if </span><span style="color:#bf616a;">self</span><span>.head.</span><span style="color:#96b5b4;">compare_and_swap</span><span>(head, next, Release) == head {
+</span><span>    </span><span style="color:#b48ead;">let</span><span> val = Some(</span><span style="color:#b48ead;">unsafe </span><span>{ ptr::read(&amp;(*head).val) });
+</span><span>    </span><span style="color:#65737e;">// Box the value and drop it.
+</span><span>    </span><span style="color:#b48ead;">unsafe </span><span>{ Box::from_raw(head); }
+</span><span>    </span><span style="color:#b48ead;">return</span><span> val;
+</span><span>}
+</span></code></pre>
+<h2 id="aba-problem">ABA Problem</h2>
+<p>现在我们拥有一个栈 <code>A -&gt; B -&gt; C</code> ，每一个字母表示一个内存地址，箭头表示该内存地址的 <code>next</code> 指向的地址。假设我们现在有两个线程同时分别执行下面的操作：</p>
+<ul>
+<li>Thread 1 ：弹出一个元素。</li>
+<li>Thread 2 : 两次弹出元素，压入一个元素。</li>
+</ul>
+<p>此时， 在 Thread 1 读入 <code>head</code> 值后，调度程序让 Thread 1 停止，同时 Thread 2 开始执行。按照我们的实现，Thread 2 将会释放 A 和 B 对应的内存。在 <code>push</code> 中，Thread 2 申请了一个新内存空间用于安放新的头部节点。此时问题出现：分配器有可能会重用已经被释放的内存。也就是说，分配器分配的新地址可能会是 A 。此时，如果 Thread 1 开始执行：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let</span><span> next = </span><span style="color:#b48ead;">unsafe </span><span>{ (*head).next.</span><span style="color:#96b5b4;">map</span><span>(|</span><span style="color:#bf616a;">n</span><span>| n.</span><span style="color:#96b5b4;">as_ptr</span><span>()).</span><span style="color:#96b5b4;">unwrap_or</span><span>(</span><span style="color:#96b5b4;">null_mut</span><span>()) };
+</span><span style="color:#65737e;">// Thread 1 stopped here before.
+</span><span>
+</span><span style="color:#65737e;">// Thread 1 pass the check, because the allocator allocates the same address for the new head.
+</span><span style="color:#b48ead;">if </span><span style="color:#bf616a;">self</span><span>.head.</span><span style="color:#96b5b4;">compare_and_swap</span><span>(head, next, Release) == head {
+</span><span>    </span><span style="color:#b48ead;">return </span><span>Some(</span><span style="color:#b48ead;">unsafe </span><span>{ ptr::read(&amp;(*head).val) });
+</span><span>    </span><span style="color:#65737e;">// Because Thread 1 remember the previous next, which points to B, which is dangling now,
+</span><span>    </span><span style="color:#65737e;">// future accesses will panic due to `use after free`! 🤯
+</span><span>}
+</span></code></pre>
+<p>造成这个问题的原因主要有两个：</p>
+<ul>
+<li>在删除一个节点时，我们无法保证没有其他线程正在使用这个指针，因为其他线程可能记录了将被删除的指针的值。</li>
+<li>内存复用。</li>
+</ul>
+<p>所以在实现了垃圾回收机制的语言不存在这个问题。对于这种问题的解决方案的关注点都在于：我们何时能够释放一个节点。在 <a href="https://github.com/crossbeam-rs/crossbeam">Crossbeam</a> 中使用了 EBR 来解决这个问题。</p>
+<h2 id="epoch-based-reclamation">Epoch-based Reclamation</h2>
+<p>实现这个机制需要：</p>
+<ul>
+<li>一个全局 epoch 计数器（epoch 数值合理范围为 0-2 ）。</li>
+<li>每一个 epoch 的全局垃圾容器。</li>
+<li>每一个线程的激活标记。</li>
+<li>每一个线程的 epoch 计数器。</li>
+</ul>
+<p>与传统的垃圾回收不同的是，该机制并不需要通过图找到那些实际不再需要的垃圾，而是通过 epoch 来回收：需要清理的内存在当前 epoch 的两代之前。具体的步骤如下：</p>
+<p>当一个线程需要对无锁结构进行操作时，它激活自己的标记，然后将自己的计数器更新至与全局相同的值。如果它需要移除一个内存地址，它所做的并不是直接将其释放，而是 <strong>把内存放入到对应 epoch 的垃圾容器内</strong> 。最后将标记改为未激活。</p>
+<p>当一个线程需要进行回收时，需要检查所有的激活线程是否都在当前的 epoch 中。如果都在当前 epoch ，那么就将全局计数器加一，如果修改成功，就可以清理两代之前的内存。这样可以保证所有当前正在被引用的内存都在上一代，且两代之前的内存已经被清理。</p>
+
+
+         </main>
+
+         <footer>
+            
+<p class="tagsData">
+
+</p>
+
+            <hr>
+            <div class=footContainer>
+               <div class="footLeft">
+                  <p>Licensed under <a target="_blank" rel="noopener noreferrer" href="https://fr.wikipedia.org/wiki/Licence_MIT">MIT</a><br>
+                     Built with <a target="_blank" rel="noopener noreferrer" href="https://www.getzola.org">Zola</a> using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> theme &amp; <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/veqev">veqev</a> colors.<br>
+                  </p>
+               </div>
+               <div class="footRight">
+                  <!-- Size 46x46 -->
+                  <img class="footGif noStyle" loading="lazy" src="https://i.ibb.co/XYDpfcs/foot.gif" alt="footGif">
+                  <a class="metaData" target="_blank" rel="noopener noreferrer" href="https://refrigerator.navihx.top/atom.xml" title="Subscribe via RSS for updates.">RSS</a>
+               </div>
+            </div>
+         </footer>
+      </div>
+   </body>
+</html>
