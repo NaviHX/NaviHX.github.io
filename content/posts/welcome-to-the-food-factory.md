@@ -130,14 +130,14 @@ impl Order for OriginalOrder {
 }
 
 struct RoastOrder;
-imple Order for RoastOrder {
+impl Order for RoastOrder {
     fn produce(input: Ingredients) -> Dish {
         roast_machine(input) // 这个订单需要火烤。
     }
 }
 
 struct FryOrder;
-imple Order for FryOrder {
+impl Order for FryOrder {
     fn produce(input: Ingredients) -> Dish {
         fry_order(input) // 油炸也是可以完成的。
     }
