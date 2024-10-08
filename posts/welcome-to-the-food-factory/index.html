@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+      <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+      <meta name="robots" content="index, follow">
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <title>Welcome to the Food Factory</title>
+      
+      
+      
+      <meta name="title" content="Welcome to the Food Factory">
+      
+      
+      
+      <meta property="og:type" content="website">
+      <meta property="og:url" content="https://refrigerator.navihx.top/posts/welcome-to-the-food-factory/">
+      
+      <meta property="og:site_name" content="">
+      
+      
+      <meta property="og:title" content="Welcome to the Food Factory">
+      
+      
+      
+      <meta property="og:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://refrigerator.navihx.top/posts/welcome-to-the-food-factory/">
+      
+      <meta property="twitter:title" content="Welcome to the Food Factory">
+      
+      
+      
+      <meta property="twitter:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      <link rel="canonical" href="https://refrigerator.navihx.top/posts/welcome-to-the-food-factory/">
+      
+      <link rel="shortcut icon" type="image/x-icon" href="https://refrigerator.navihx.top/favicon.ico">
+      
+      
+      
+      
+      <link rel="alternate" type="application/atom+xml" title="RSS" href="https://refrigerator.navihx.top/atom.xml">
+      
+      
+      
+      <link rel="stylesheet" href="https://refrigerator.navihx.top/css/style.css"/>
+      
+   </head>
+   <body>
+      <div class="wrapper">
+         <header>
+            
+            <nav class="navBar">
+               
+               
+               
+               <a href="/" >&#x2F;home&#x2F;</a>
+               
+               
+               
+               
+               <a href="/posts" >&#x2F;posts&#x2F;</a>
+               
+               
+
+               <div class="themeSwitch">
+                  <button class="themeButton light" onclick="setTheme('light')" title="Light mode">◐</button>
+                  <button class="themeButton dark" onclick="setTheme('dark')" title="Dark mode">◑</button>
+               </div>
+            </nav>
+            
+
+            <script>
+               const setTheme = (theme) => {
+                   document.documentElement.className = theme;
+                   localStorage.setItem('theme', theme);
+               }
+               const getTheme = () => {
+                   const theme = localStorage.getItem('theme');
+                   theme && setTheme(theme);
+               }
+               getTheme()
+            </script>
+         </header>
+
+         <main>
+            
+
+
+
+
+<h1 id="welcome-to-the-food-factory">Welcome to the Food Factory!</h1>
+<p>这是一篇介绍 <a href="https://zh.wikipedia.org/wiki/%E5%B7%A5%E5%8E%82%E6%96%B9%E6%B3%95">工厂模式</a> 的短文。</p>
+<h2 id="yuan-shi-ji-qi">原始机器</h2>
+<p>假如你是一位机械工程师，你开发了一款机器，它可以自动使用原材料生产食物。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">original_machine</span><span>(</span><span style="color:#bf616a;">input</span><span>: Ingredients) -&gt; Dish {
+</span><span>    </span><span style="color:#b48ead;">let</span><span> water = </span><span style="color:#96b5b4;">boil</span><span>(</span><span style="color:#d08770;">100</span><span>);
+</span><span>    </span><span style="color:#b48ead;">let</span><span> dish = </span><span style="color:#96b5b4;">make_dish_with_water</span><span>(input, water);
+</span><span>    dish
+</span><span>}
+</span></code></pre>
+<p>你觉得这样很不错，因为你可以使用这一台机器构造流水线，完成每天的工厂生产任务。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let mut</span><span> products = vec![];
+</span><span style="color:#b48ead;">for</span><span> i in </span><span style="color:#d08770;">0</span><span>..</span><span style="color:#d08770;">1000 </span><span>{
+</span><span>    </span><span style="color:#b48ead;">let</span><span> input = </span><span style="color:#96b5b4;">get_ingredients</span><span>();
+</span><span>    </span><span style="color:#b48ead;">let</span><span> new_product = </span><span style="color:#96b5b4;">original_machine</span><span>(input);
+</span><span>    products.</span><span style="color:#96b5b4;">push</span><span>(new_product);
+</span><span>}
+</span></code></pre>
+<h2 id="ding-dan-xu-qiu-gai-bian">订单需求改变</h2>
+<p>你突然接到了一个新订单，它不再需要用水煮的食物，而是用火烤的。你的第一反应是改进原本的机器。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">original_machine</span><span>(</span><span style="color:#bf616a;">input</span><span>: Ingredients) -&gt; Dish {
+</span><span>    </span><span style="color:#b48ead;">let</span><span> dish = </span><span style="color:#96b5b4;">roast</span><span>(input);
+</span><span>    dish
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">let mut</span><span> products = vec![];
+</span><span style="color:#b48ead;">for</span><span> i in </span><span style="color:#d08770;">0</span><span>..</span><span style="color:#d08770;">1000 </span><span>{
+</span><span>    </span><span style="color:#b48ead;">let</span><span> input = </span><span style="color:#96b5b4;">get_ingredients</span><span>();
+</span><span>    </span><span style="color:#b48ead;">let</span><span> new_product = </span><span style="color:#96b5b4;">original_machine</span><span>(input);
+</span><span>    products.</span><span style="color:#96b5b4;">push</span><span>(new_product);
+</span><span>}
+</span></code></pre>
+<p>实际上，这是一个很不明智的做法：如果你还需要生产原始的订单，你还需要把机器再改回去。所以，一个更好的方法是，在保留原有的机器基础上，重新设计一台新机器。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">original_machine</span><span>(</span><span style="color:#bf616a;">input</span><span>: Ingredients) -&gt; Dish {
+</span><span>    </span><span style="color:#b48ead;">let</span><span> water = </span><span style="color:#96b5b4;">boil</span><span>(</span><span style="color:#d08770;">100</span><span>);
+</span><span>    </span><span style="color:#b48ead;">let</span><span> dish = </span><span style="color:#96b5b4;">make_dish_with_water</span><span>(input, water);
+</span><span>    dish
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">roast_machine</span><span>(</span><span style="color:#bf616a;">input</span><span>: Ingredients) -&gt; Dish {
+</span><span>    </span><span style="color:#b48ead;">let</span><span> dish = </span><span style="color:#96b5b4;">roast</span><span>(input);
+</span><span>    dish
+</span><span>}
+</span></code></pre>
+<p>这样的话，你就能根据订单类型来决定生产哪种食品了。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">enum </span><span>Order{
+</span><span>    Original,
+</span><span>    Roast,
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">assembly_line</span><span>(</span><span style="color:#bf616a;">order</span><span>: Order, </span><span style="color:#bf616a;">amount</span><span>: </span><span style="color:#b48ead;">usize</span><span>) -&gt; Vec&lt;Dish&gt; {
+</span><span>    </span><span style="color:#b48ead;">let mut</span><span> products = vec![];
+</span><span>    </span><span style="color:#b48ead;">for</span><span> i in </span><span style="color:#d08770;">0</span><span>..amount {
+</span><span>        </span><span style="color:#b48ead;">use </span><span>Order::*;
+</span><span>        </span><span style="color:#b48ead;">let</span><span> input = </span><span style="color:#96b5b4;">get_ingredients</span><span>();
+</span><span>
+</span><span>        </span><span style="color:#b48ead;">let</span><span> new_product = </span><span style="color:#b48ead;">match</span><span> order {
+</span><span>            Original =&gt; </span><span style="color:#96b5b4;">original_machine</span><span>(input),
+</span><span>            Roast =&gt; </span><span style="color:#96b5b4;">roast_machine</span><span>(input),
+</span><span>        };
+</span><span>        products.</span><span style="color:#96b5b4;">push</span><span>(new_product);
+</span><span>    }
+</span><span>
+</span><span>    products
+</span><span>}
+</span></code></pre>
+<p>然而，随着你业务的增长，你的流水线里很可能有非常多的机器种类。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">assembly_line</span><span>(</span><span style="color:#bf616a;">order</span><span>: Order, </span><span style="color:#bf616a;">amount</span><span>: </span><span style="color:#b48ead;">usize</span><span>) -&gt; Vec&lt;Dish&gt; {
+</span><span>    </span><span style="color:#65737e;">// ...
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">let</span><span> new_product = </span><span style="color:#b48ead;">match</span><span> order {
+</span><span>        Original =&gt; </span><span style="color:#65737e;">// ...
+</span><span>        Roast =&gt; </span><span style="color:#65737e;">// ...
+</span><span>        </span><span style="color:#65737e;">// Oh my god. Too many machines!
+</span><span>        Fry =&gt; </span><span style="color:#65737e;">// ...
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#65737e;">///...
+</span><span>}
+</span></code></pre>
+<p>这个时候，你的流水线构造（或者说你的代码）将会变得十分冗余，每次添加新的订单种类，总是需要设计新的机器。有没有办法作出改变呢？</p>
+<h2 id="zuo-shi-yao-ni-lai-jue-ding">做什么，你来决定</h2>
+<p>在之前的设计中，流水线只能生产已经设计好的产品（已经设计了机器的商品）。而实际上，客户总是能提出新的订单需求，作为工程师，每次设计一个新的机器是十分费神的。为了节约精力，我们需要让客户自己决定生产的流程。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">trait </span><span>Order {
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">produce</span><span>(</span><span style="color:#bf616a;">input</span><span>: Ingredients) -&gt; Dish;
+</span><span>}
+</span></code></pre>
+<p>客户需要通过写明制作流程，告诉我们应该如何制作。我们只需要制造新的满足流程的机器就好了。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">struct </span><span>OriginalOrder;
+</span><span style="color:#b48ead;">impl </span><span>Order </span><span style="color:#b48ead;">for </span><span>OriginalOrder {
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">produce</span><span>(</span><span style="color:#bf616a;">input</span><span>: Ingredients) -&gt; Dish {
+</span><span>        </span><span style="color:#96b5b4;">original_machine</span><span>(input) </span><span style="color:#65737e;">// 客户说，使用本来的设计就行了。
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">struct </span><span>RoastOrder;
+</span><span style="color:#b48ead;">impl </span><span>Order </span><span style="color:#b48ead;">for </span><span>RoastOrder {
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">produce</span><span>(</span><span style="color:#bf616a;">input</span><span>: Ingredients) -&gt; Dish {
+</span><span>        </span><span style="color:#96b5b4;">roast_machine</span><span>(input) </span><span style="color:#65737e;">// 这个订单需要火烤。
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">struct </span><span>FryOrder;
+</span><span style="color:#b48ead;">impl </span><span>Order </span><span style="color:#b48ead;">for </span><span>FryOrder {
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">produce</span><span>(</span><span style="color:#bf616a;">input</span><span>: Ingredients) -&gt; Dish {
+</span><span>        </span><span style="color:#96b5b4;">fry_order</span><span>(input) </span><span style="color:#65737e;">// 油炸也是可以完成的。
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>当需要生产时，客户把订单交给我们，我们按订单上写明的流程生产就行了。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">assembly_line</span><span>(</span><span style="color:#bf616a;">order</span><span>: impl Order, </span><span style="color:#bf616a;">amount</span><span>: </span><span style="color:#b48ead;">usize</span><span>) -&gt; Vec&lt;Dish&gt; {
+</span><span>    </span><span style="color:#b48ead;">let mut</span><span> products = vec![];
+</span><span>    </span><span style="color:#b48ead;">for</span><span> i in </span><span style="color:#d08770;">0</span><span>..amount {
+</span><span>        </span><span style="color:#b48ead;">let</span><span> input = </span><span style="color:#96b5b4;">get_ingredients</span><span>();
+</span><span>        </span><span style="color:#b48ead;">let</span><span> new_product = order.</span><span style="color:#96b5b4;">produce</span><span>(input);
+</span><span>
+</span><span>        products.</span><span style="color:#96b5b4;">push</span><span>(new_product);
+</span><span>    }
+</span><span>
+</span><span>    products
+</span><span>}
+</span></code></pre>
+<h2 id="xian-zai-ni-yong-you-liao-gong-han-mo-shi">现在你拥有了工厂模式</h2>
+<p>如果我们把这层食品工厂的皮扒掉，工厂其实是一个这样的东西。</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>Factory :: Input -&gt; Output
+</span></code></pre>
+<p>它获取一个输入，返回一个输出。这里的输出既可以是某一个具体的类型，也可以是满足一个特征的类型集合，我们根据输入的不同产生不同的输出。</p>
+<p>工厂提供了创建一个值的流程的抽象，将创建流程的控制反转给了输入。</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>Produce :: input -&gt; Factory -&gt; output
+</span><span>Produce input factory = factory input -- 根据不同的工厂决定如何输出
+</span></code></pre>
+
+
+         </main>
+
+         <footer>
+            
+<p class="tagsData">
+
+</p>
+
+            <hr>
+            <div class=footContainer>
+               <div class="footLeft">
+                  <p>Licensed under <a target="_blank" rel="noopener noreferrer" href="https://fr.wikipedia.org/wiki/Licence_MIT">MIT</a><br>
+                     Built with <a target="_blank" rel="noopener noreferrer" href="https://www.getzola.org">Zola</a> using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> theme &amp; <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/veqev">veqev</a> colors.<br>
+                  </p>
+               </div>
+               <div class="footRight">
+                  <!-- Size 46x46 -->
+                  <img class="footGif noStyle" loading="lazy" src="https://i.ibb.co/XYDpfcs/foot.gif" alt="footGif">
+                  <a class="metaData" target="_blank" rel="noopener noreferrer" href="https://refrigerator.navihx.top/atom.xml" title="Subscribe via RSS for updates.">RSS</a>
+               </div>
+            </div>
+         </footer>
+      </div>
+   </body>
+</html>

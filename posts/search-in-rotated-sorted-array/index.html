@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+      <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+      <meta name="robots" content="index, follow">
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <title>Search in Rotated Sorted Array</title>
+      
+      
+      
+      <meta name="title" content="Search in Rotated Sorted Array">
+      
+      
+      
+      <meta property="og:type" content="website">
+      <meta property="og:url" content="https://refrigerator.navihx.top/posts/search-in-rotated-sorted-array/">
+      
+      <meta property="og:site_name" content="">
+      
+      
+      <meta property="og:title" content="Search in Rotated Sorted Array">
+      
+      
+      
+      <meta property="og:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://refrigerator.navihx.top/posts/search-in-rotated-sorted-array/">
+      
+      <meta property="twitter:title" content="Search in Rotated Sorted Array">
+      
+      
+      
+      <meta property="twitter:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      <link rel="canonical" href="https://refrigerator.navihx.top/posts/search-in-rotated-sorted-array/">
+      
+      <link rel="shortcut icon" type="image/x-icon" href="https://refrigerator.navihx.top/favicon.ico">
+      
+      
+      
+      
+      <link rel="alternate" type="application/atom+xml" title="RSS" href="https://refrigerator.navihx.top/atom.xml">
+      
+      
+      
+      <link rel="stylesheet" href="https://refrigerator.navihx.top/css/style.css"/>
+      
+   </head>
+   <body>
+      <div class="wrapper">
+         <header>
+            
+            <nav class="navBar">
+               
+               
+               
+               <a href="/" >&#x2F;home&#x2F;</a>
+               
+               
+               
+               
+               <a href="/posts" >&#x2F;posts&#x2F;</a>
+               
+               
+
+               <div class="themeSwitch">
+                  <button class="themeButton light" onclick="setTheme('light')" title="Light mode">◐</button>
+                  <button class="themeButton dark" onclick="setTheme('dark')" title="Dark mode">◑</button>
+               </div>
+            </nav>
+            
+
+            <script>
+               const setTheme = (theme) => {
+                   document.documentElement.className = theme;
+                   localStorage.setItem('theme', theme);
+               }
+               const getTheme = () => {
+                   const theme = localStorage.getItem('theme');
+                   theme && setTheme(theme);
+               }
+               getTheme()
+            </script>
+         </header>
+
+         <main>
+            
+
+
+
+
+<h1 id="search-in-rotated-sorted-array">Search in Rotated Sorted Array</h1>
+<p>如果我们需要在一个已经排好序的数组中寻找某个元素，首选的方法肯定是进行二分搜索——因为在排序完成的数组中搜索满足单调性。但是将这个数组进行旋转后，是否依旧能进行二分搜索呢？</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>123456 -&gt; 3456 12
+</span></code></pre>
+<p>这个例子展示了数组旋转的结果：将整个数组旋转了 4 位。数组的旋转定义如下：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>原数组 N 经过 x (x &gt; 0) 位旋转后得到的新数组 N&#39; 满足：
+</span><span>
+</span><span>N&#39;[i] = N[i - x] ，索引值需要对数组长度进行取模。
+</span></code></pre>
+<h2 id="dan-diao-xing">单调性</h2>
+<p>经过旋转后的排序数组已经不再拥有单调性，但是一部分元素内部仍然具有单调性。比如说下面这个数组：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>3456 | 12
+</span></code></pre>
+<p>被分割开的部分是数组本来的起始位置，在它的两侧，元素分别拥有单调性。这意味着，我们任意选择一个索引把数组分为两侧，至少有一侧的元素可以保持单调：因为数组原本的起始位置只可能落在一侧，另一侧一定是单调的。</p>
+<p>根据这个性质，我们可以把数组从某个索引分为两个部分，一个部分拥有单调性，而另一个部分（不一定）没有单调性。在有单调性的一侧，我们只需要将搜索的目标值与起始位置和末尾位置的元素进行比较，就能知道目标值是否有可能落在这个区间，否则目标值只可能在另一侧。</p>
+<h2 id="shi-xian">实现</h2>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">search</span><span>(</span><span style="color:#bf616a;">nums</span><span>: Vec&lt;</span><span style="color:#b48ead;">i32</span><span>&gt;, </span><span style="color:#bf616a;">target</span><span>: </span><span style="color:#b48ead;">i32</span><span>) -&gt; </span><span style="color:#b48ead;">i32 </span><span>{
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">bsearch</span><span>(</span><span style="color:#bf616a;">nums</span><span>: &amp;[</span><span style="color:#b48ead;">i32</span><span>], </span><span style="color:#bf616a;">target</span><span>: </span><span style="color:#b48ead;">i32</span><span>, </span><span style="color:#bf616a;">offset</span><span>: </span><span style="color:#b48ead;">usize</span><span>) -&gt; </span><span style="color:#b48ead;">i32 </span><span>{
+</span><span>        </span><span style="color:#b48ead;">let</span><span> len = nums.</span><span style="color:#96b5b4;">len</span><span>();
+</span><span>        println!(&quot;</span><span style="color:#d08770;">{}</span><span style="color:#a3be8c;"> - </span><span style="color:#d08770;">{}</span><span>&quot;, offset, offset + len);
+</span><span>        </span><span style="color:#b48ead;">let</span><span> mid = len &gt;&gt; </span><span style="color:#d08770;">1</span><span>;
+</span><span>
+</span><span>        </span><span style="color:#b48ead;">if</span><span> nums[mid] == target {
+</span><span>            (offset + mid) as </span><span style="color:#b48ead;">i32
+</span><span>        } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>            </span><span style="color:#b48ead;">if</span><span> mid + </span><span style="color:#d08770;">1 </span><span>&lt; len &amp;&amp; nums[mid + </span><span style="color:#d08770;">1</span><span>] &lt;= nums[len - </span><span style="color:#d08770;">1</span><span>] {
+</span><span>                </span><span style="color:#b48ead;">if</span><span> target &gt;= nums[mid + </span><span style="color:#d08770;">1</span><span>] &amp;&amp; target &lt;= nums[len - </span><span style="color:#d08770;">1</span><span>] {
+</span><span>                    </span><span style="color:#96b5b4;">bsearch</span><span>(&amp;nums[mid+</span><span style="color:#d08770;">1</span><span>..], target, offset + mid + </span><span style="color:#d08770;">1</span><span>)
+</span><span>                } </span><span style="color:#b48ead;">else if</span><span> mid &gt;= </span><span style="color:#d08770;">1 </span><span>{
+</span><span>                    </span><span style="color:#96b5b4;">bsearch</span><span>(&amp;nums[..mid], target, offset)
+</span><span>                } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>                    -</span><span style="color:#d08770;">1
+</span><span>                }
+</span><span>            } </span><span style="color:#b48ead;">else if</span><span> mid &gt;= </span><span style="color:#d08770;">1 </span><span>&amp;&amp; nums[mid - </span><span style="color:#d08770;">1</span><span>] &gt;= nums[</span><span style="color:#d08770;">0</span><span>] {
+</span><span>                </span><span style="color:#b48ead;">if</span><span> target &gt;= nums[</span><span style="color:#d08770;">0</span><span>] &amp;&amp; target &lt;= nums[mid - </span><span style="color:#d08770;">1</span><span>] {
+</span><span>                    </span><span style="color:#96b5b4;">bsearch</span><span>(&amp;nums[..mid], target, offset)
+</span><span>                } </span><span style="color:#b48ead;">else if</span><span> mid + </span><span style="color:#d08770;">1 </span><span>&lt; len {
+</span><span>                    </span><span style="color:#96b5b4;">bsearch</span><span>(&amp;nums[mid+</span><span style="color:#d08770;">1</span><span>..], target, offset + mid + </span><span style="color:#d08770;">1</span><span>)
+</span><span>                } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>                    -</span><span style="color:#d08770;">1
+</span><span>                }
+</span><span>            } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>                -</span><span style="color:#d08770;">1
+</span><span>            }
+</span><span>        }
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#96b5b4;">bsearch</span><span>(&amp;nums, target, </span><span style="color:#d08770;">0</span><span>)
+</span><span>}
+</span></code></pre>
+
+
+         </main>
+
+         <footer>
+            
+<p class="tagsData">
+
+</p>
+
+            <hr>
+            <div class=footContainer>
+               <div class="footLeft">
+                  <p>Licensed under <a target="_blank" rel="noopener noreferrer" href="https://fr.wikipedia.org/wiki/Licence_MIT">MIT</a><br>
+                     Built with <a target="_blank" rel="noopener noreferrer" href="https://www.getzola.org">Zola</a> using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> theme &amp; <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/veqev">veqev</a> colors.<br>
+                  </p>
+               </div>
+               <div class="footRight">
+                  <!-- Size 46x46 -->
+                  <img class="footGif noStyle" loading="lazy" src="https://i.ibb.co/XYDpfcs/foot.gif" alt="footGif">
+                  <a class="metaData" target="_blank" rel="noopener noreferrer" href="https://refrigerator.navihx.top/atom.xml" title="Subscribe via RSS for updates.">RSS</a>
+               </div>
+            </div>
+         </footer>
+      </div>
+   </body>
+</html>

@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+      <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+      <meta name="robots" content="index, follow">
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <title>Lowest Common Ancestor</title>
+      
+      
+      
+      <meta name="title" content="Lowest Common Ancestor">
+      
+      
+      
+      <meta property="og:type" content="website">
+      <meta property="og:url" content="https://refrigerator.navihx.top/posts/lowest-common-ancestor/">
+      
+      <meta property="og:site_name" content="">
+      
+      
+      <meta property="og:title" content="Lowest Common Ancestor">
+      
+      
+      
+      <meta property="og:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://refrigerator.navihx.top/posts/lowest-common-ancestor/">
+      
+      <meta property="twitter:title" content="Lowest Common Ancestor">
+      
+      
+      
+      <meta property="twitter:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      <link rel="canonical" href="https://refrigerator.navihx.top/posts/lowest-common-ancestor/">
+      
+      <link rel="shortcut icon" type="image/x-icon" href="https://refrigerator.navihx.top/favicon.ico">
+      
+      
+      
+      
+      <link rel="alternate" type="application/atom+xml" title="RSS" href="https://refrigerator.navihx.top/atom.xml">
+      
+      
+      
+      <link rel="stylesheet" href="https://refrigerator.navihx.top/css/style.css"/>
+      
+   </head>
+   <body>
+      <div class="wrapper">
+         <header>
+            
+            <nav class="navBar">
+               
+               
+               
+               <a href="/" >&#x2F;home&#x2F;</a>
+               
+               
+               
+               
+               <a href="/posts" >&#x2F;posts&#x2F;</a>
+               
+               
+
+               <div class="themeSwitch">
+                  <button class="themeButton light" onclick="setTheme('light')" title="Light mode">◐</button>
+                  <button class="themeButton dark" onclick="setTheme('dark')" title="Dark mode">◑</button>
+               </div>
+            </nav>
+            
+
+            <script>
+               const setTheme = (theme) => {
+                   document.documentElement.className = theme;
+                   localStorage.setItem('theme', theme);
+               }
+               const getTheme = () => {
+                   const theme = localStorage.getItem('theme');
+                   theme && setTheme(theme);
+               }
+               getTheme()
+            </script>
+         </header>
+
+         <main>
+            
+
+
+
+
+<h1 id="lowest-common-ancestor">Lowest Common Ancestor</h1>
+<p>给定一棵树与树中的两个节点，如何找出这两个节点的最近公共祖先。最近公共祖先的定义为，对于一个有根树 T 与其中的两个节点 p ， q ，p 与 q 的最近公共祖先为一个节点 x ，满足以 x 为根的子树同时包含了节点 p 与 q ，且 x 的深度尽可能的深。</p>
+<h2 id="po-su-zuo-fa-dfs">朴素做法： DFS</h2>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">type </span><span>RefNode = RefCell&lt;TreeNode&gt;;
+</span><span style="color:#b48ead;">type </span><span>RcNode = Rc&lt;RefNode&gt;;
+</span><span style="color:#b48ead;">type </span><span>PtrNode = </span><span style="color:#b48ead;">*const</span><span> RefNode;
+</span><span style="color:#b48ead;">type </span><span>MaybeNode = Option&lt;RcNode&gt;;
+</span><span>
+</span><span style="color:#b48ead;">enum </span><span>Res {
+</span><span>    Both(MaybeRcNode), </span><span style="color:#65737e;">// LCA
+</span><span>    Only1,
+</span><span>    Only2,
+</span><span>    Neither,
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">dfs</span><span>(</span><span style="color:#bf616a;">root</span><span>: MaybeRcNode, </span><span style="color:#bf616a;">node1</span><span>: RcNode, </span><span style="color:#bf616a;">node2</span><span>: RcNode) -&gt; Res {
+</span><span>    </span><span style="color:#b48ead;">if let </span><span>Some(root) = root {
+</span><span>        </span><span style="color:#b48ead;">let</span><span> left = root.</span><span style="color:#96b5b4;">borrow_mut</span><span>().left.</span><span style="color:#96b5b4;">take</span><span>();
+</span><span>        </span><span style="color:#b48ead;">let</span><span> right = root.</span><span style="color:#96b5b4;">borrow_mut</span><span>().right.</span><span style="color:#96b5b4;">take</span><span>();
+</span><span>
+</span><span>        </span><span style="color:#b48ead;">match </span><span>(root == node1, root == node2, </span><span style="color:#96b5b4;">dfs</span><span>(left, node1, node2), </span><span style="color:#96b5b4;">dfs</span><span>(right, node1, node2)) {
+</span><span>            (_, _, Both(ans), _) | (_, _, _, Both(ans)) =&gt; Both(ans),
+</span><span>            (</span><span style="color:#d08770;">true</span><span>, </span><span style="color:#d08770;">true</span><span>, _, _) =&gt; Both(Some(root)),
+</span><span>            (_, _, Only1, Only2) | (_, _, Only2, Only1) =&gt; Both(Some(root)),
+</span><span>            (</span><span style="color:#d08770;">true</span><span>, _, Only2, _) | (</span><span style="color:#d08770;">true</span><span>, _, _, Only2) =&gt; Both(Some(root)),
+</span><span>            (_, </span><span style="color:#d08770;">true</span><span>, Only1, _) | (_, </span><span style="color:#d08770;">true</span><span>, _, Only1) =&gt; Both(Some(root)),
+</span><span>            (</span><span style="color:#d08770;">true</span><span>, _, Only1, _) | (</span><span style="color:#d08770;">true</span><span>, _, _, Only1) =&gt; Only1,
+</span><span>            (_, </span><span style="color:#d08770;">true</span><span>, Only2, _) | (_, </span><span style="color:#d08770;">true</span><span>, _, Only2) =&gt; Only2,
+</span><span>            (_, _, Only1, Only1) =&gt; Only1,
+</span><span>            (_, _, Only2, Only2) =&gt; Only2,
+</span><span>            _ =&gt; Neither,
+</span><span>        }
+</span><span>    } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>        Res::Neither
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<h2 id="duo-ci-cha-xun">多次查询</h2>
+<p>上面的做法对于单次查询比较有效，只需要将树中的所有节点遍历一遍就可以找到最近公共祖先。但是如果我们将要对同一棵树进行多次的 LCA 查询，这种做法的效率就无法接受了。我们可不可以只遍历一次树，利用树的信息来寻找 LCA 呢？</p>
+<p>通过一次遍历，从树中我们可以得到任意一个节点的深度与父亲节点信息。因此我们可以通过下面这个步骤来寻找 LCA ：</p>
+<ol>
+<li>将两个节点指针中，深度较大的指针向上移动至同一个深度。</li>
+<li>比较两个节点指针，如果相同，则这个节点就是 LCA ，否则跳至第三步。</li>
+<li>将两个节点指针分别移动到他们的父节点。</li>
+</ol>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let mut</span><span> depth: HashMap&lt;PtrNode, </span><span style="color:#b48ead;">usize</span><span>&gt; = HashMap::new();
+</span><span style="color:#b48ead;">let mut</span><span> parent: HashMap&lt;PtrNode, RcNode&gt; = HashMap::new();
+</span><span>
+</span><span style="color:#96b5b4;">build_info</span><span>(root.</span><span style="color:#96b5b4;">clone</span><span>(), None, &amp;</span><span style="color:#b48ead;">mut</span><span> depth, &amp;</span><span style="color:#b48ead;">mut</span><span> parent); </span><span style="color:#65737e;">// fn build_info(root, parent_node: MaybeNode, depth, parent);
+</span><span>
+</span><span style="color:#b48ead;">let</span><span> depth1 = depth[&amp;(node1.</span><span style="color:#96b5b4;">as_ptr</span><span>() as </span><span style="color:#b48ead;">*const </span><span>_)];
+</span><span style="color:#b48ead;">let</span><span> depth2 = depth[&amp;(node2.</span><span style="color:#96b5b4;">as_ptr</span><span>() as </span><span style="color:#b48ead;">*const </span><span>_)];
+</span><span>
+</span><span style="color:#65737e;">// Make sure depth1 &lt;= depth2
+</span><span style="color:#b48ead;">if</span><span> depth2 &lt; depth1 {
+</span><span>    std::mem::swap(&amp;</span><span style="color:#b48ead;">mut</span><span> depth1, &amp;</span><span style="color:#b48ead;">mut</span><span> depth2);
+</span><span>    std::mem::swap(&amp;</span><span style="color:#b48ead;">mut</span><span> node1, &amp;</span><span style="color:#b48ead;">mut</span><span> node2);
+</span><span>}
+</span><span>
+</span><span style="color:#65737e;">// Raise node1
+</span><span style="color:#b48ead;">let</span><span> d = depth2 - depth1;
+</span><span style="color:#b48ead;">for </span><span>_ in </span><span style="color:#d08770;">0</span><span>..d {
+</span><span>    node2 = parent[&amp;(node2.</span><span style="color:#96b5b4;">as_ptr</span><span>() as </span><span style="color:#b48ead;">*const </span><span>_)];
+</span><span>}
+</span><span>
+</span><span style="color:#65737e;">// Raise both until equal
+</span><span style="color:#b48ead;">while</span><span> node1 != node2 {
+</span><span>    node1 = parent[&amp;(node1.</span><span style="color:#96b5b4;">as_ptr</span><span>() as </span><span style="color:#b48ead;">*const </span><span>_)].</span><span style="color:#96b5b4;">clone</span><span>();
+</span><span>    node2 = parent[&amp;(node2.</span><span style="color:#96b5b4;">as_ptr</span><span>() as </span><span style="color:#b48ead;">*const </span><span>_)].</span><span style="color:#96b5b4;">clone</span><span>();
+</span><span>}
+</span><span>
+</span><span style="color:#65737e;">// LCA
+</span><span style="color:#b48ead;">return</span><span> node1;
+</span></code></pre>
+<h2 id="bei-zeng">倍增</h2>
+<p>在上面这个过程中，我们发现后续的 Raise 过程的时间复杂度与深度有关。当二叉树退化为链表时，时间复杂度退化为整个树的节点数目，不算十分理想。我们是否可以加速 Raise 过程呢？</p>
+<p>我们不妨修改一下 parent 的定义，将其通过索引节点指针得到的结果变成一个列表（而不是直接父节点），第 i 个位置的元素表示这个节点的第 2^0 个父节点。这样的定义满足如下的性质：</p>
+<ol>
+<li>parent(parent(node, i-1), i-1) == parent(node, i)</li>
+<li>交换律 parent(parent(node, i), j) == parent(parent(node, j), i)</li>
+</ol>
+<p>第一条性质我们可以使用在构建 parent 表中。对于任意一个节点的 parent 列表，我们可以通过下面的过程计算。</p>
+<ol>
+<li>将这个节点的直接父节点作为它的 parent 列表的第 0 元素</li>
+<li>let i = 1</li>
+<li>使用性质一， <code>parent[node][i] = parent[parent[node][i-1]][i-1]</code>  ，如果此处的索引超出界限则跳出循环</li>
+<li>i += 1</li>
+<li>跳转到第三步</li>
+</ol>
+<p>在构建好 parent 表之后，可以通过这张表将节点指针上升任意 2 的整数次幂高度。我们接下来考虑，如何通过这个表，将节点指针上升任意高度 d 。首先，对于任意一个正整数 d ，我们可以将其转换为一个关于 2 的多项式。</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>d = (a_n)2^n + (a_(n-1))2^(n-1) + ... + (c_0)2^0
+</span><span>c_i = 0 | 1
+</span></code></pre>
+<p>这意味着我们可以通过 n 次跳跃就可以将节点指针提升任意高度。同时由于性质二交换律，我们可以任意组织跳跃的顺序。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">// raise height d
+</span><span style="color:#b48ead;">let</span><span> i = </span><span style="color:#d08770;">0</span><span>;
+</span><span style="color:#b48ead;">while</span><span> d &gt; </span><span style="color:#d08770;">0 </span><span>{
+</span><span>    node = parent[&amp;(node.</span><span style="color:#96b5b4;">as_ptr</span><span>() as </span><span style="color:#b48ead;">*const</span><span>)][i]; </span><span style="color:#65737e;">// Assume element exists
+</span><span>    i += </span><span style="color:#d08770;">1</span><span>;
+</span><span>    d &gt;&gt;= </span><span style="color:#d08770;">1</span><span>;
+</span><span>}
+</span></code></pre>
+<p>这一段代码可以代替将较低的节点指针提升到相同高度的部分。</p>
+<p>剩下的将两个节点提升到 LCA 的过程也可以通过新的 parent 表进行优化——我们不再需要将节点指针逐次提升一个高度，而是跳转到 parent 表中一个恰好没有使节点指针相同的高度。当没有一个高度可以使两个指针不同时，则父节点就是 LCA 。</p>
+<h2 id="wan-zheng-dai-ma">完整代码</h2>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">type </span><span>RefNode = RefCell&lt;TreeNode&gt;;
+</span><span style="color:#b48ead;">type </span><span>RcNode = Rc&lt;RefNode&gt;;
+</span><span style="color:#b48ead;">type </span><span>PtrNode = </span><span style="color:#b48ead;">*const</span><span> RefNode;
+</span><span style="color:#b48ead;">type </span><span>MaybeNode = Option&lt;RcNode&gt;;
+</span><span>
+</span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">lowest_common_ancestor</span><span>(</span><span style="color:#bf616a;">root</span><span>: Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;, </span><span style="color:#bf616a;">p</span><span>: Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;, </span><span style="color:#bf616a;">q</span><span>: Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;) -&gt; Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt; {
+</span><span>    </span><span style="color:#b48ead;">use </span><span>std::collections::HashMap;
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">build_parent</span><span>(</span><span style="color:#bf616a;">root</span><span>: MaybeNode, </span><span style="color:#bf616a;">depth</span><span>: </span><span style="color:#b48ead;">usize</span><span>, </span><span style="color:#bf616a;">parent</span><span>: MaybeNode, </span><span style="color:#bf616a;">parents</span><span>: &amp;</span><span style="color:#b48ead;">mut </span><span>HashMap&lt;PtrNode, Vec&lt;RcNode&gt;&gt;, </span><span style="color:#bf616a;">depths</span><span>: &amp;</span><span style="color:#b48ead;">mut </span><span>HashMap&lt;PtrNode, </span><span style="color:#b48ead;">usize</span><span>&gt;) {
+</span><span>        </span><span style="color:#b48ead;">if let </span><span>Some(root) = root {
+</span><span>            depths.</span><span style="color:#96b5b4;">insert</span><span>(&amp;(root.</span><span style="color:#96b5b4;">as_ptr</span><span>() as </span><span style="color:#b48ead;">*const </span><span>_), depth);
+</span><span>            </span><span style="color:#b48ead;">if let </span><span>Some(parent) = parent {
+</span><span>                </span><span style="color:#b48ead;">let mut</span><span> ps: Vec&lt;RcNode&gt; = vec![parent.</span><span style="color:#96b5b4;">clone</span><span>()];
+</span><span>                </span><span style="color:#b48ead;">let mut</span><span> i = </span><span style="color:#d08770;">0</span><span>;
+</span><span>                </span><span style="color:#b48ead;">loop </span><span>{
+</span><span>                    </span><span style="color:#b48ead;">if let </span><span>Some(p) = parents
+</span><span>                        .</span><span style="color:#96b5b4;">get</span><span>(&amp;(ps[i].</span><span style="color:#96b5b4;">as_ptr</span><span>() as </span><span style="color:#b48ead;">*const </span><span>_))
+</span><span>                        .</span><span style="color:#96b5b4;">and_then</span><span>(|</span><span style="color:#bf616a;">pv</span><span>| pv.</span><span style="color:#96b5b4;">get</span><span>(i))
+</span><span>                    {
+</span><span>                        ps.</span><span style="color:#96b5b4;">push</span><span>(p.</span><span style="color:#96b5b4;">clone</span><span>());
+</span><span>                        i += </span><span style="color:#d08770;">1</span><span>;
+</span><span>                    } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>                        </span><span style="color:#b48ead;">break</span><span>;
+</span><span>                    }
+</span><span>                }
+</span><span>
+</span><span>                parents.</span><span style="color:#96b5b4;">insert</span><span>(root.</span><span style="color:#96b5b4;">as_ptr</span><span>() as </span><span style="color:#b48ead;">*const </span><span>_, ps);
+</span><span>            }
+</span><span>
+</span><span>            </span><span style="color:#b48ead;">let</span><span> left = root.</span><span style="color:#96b5b4;">borrow_mut</span><span>().left.</span><span style="color:#96b5b4;">take</span><span>();
+</span><span>            </span><span style="color:#b48ead;">let</span><span> right = root.</span><span style="color:#96b5b4;">borrow_mut</span><span>().right.</span><span style="color:#96b5b4;">take</span><span>();
+</span><span>            
+</span><span>            </span><span style="color:#b48ead;">let </span><span>(pdl, qdl) = </span><span style="color:#96b5b4;">build_parent</span><span>(left, depth + </span><span style="color:#d08770;">1</span><span>, Some(root.</span><span style="color:#96b5b4;">clone</span><span>()), parents, depths);
+</span><span>            </span><span style="color:#b48ead;">let </span><span>(pdr, qdr) = </span><span style="color:#96b5b4;">build_parent</span><span>(right, depth + </span><span style="color:#d08770;">1</span><span>, Some(root.</span><span style="color:#96b5b4;">clone</span><span>()), parents, depths);
+</span><span>        }
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">if let </span><span>(Some(</span><span style="color:#b48ead;">mut</span><span> p), Some(</span><span style="color:#b48ead;">mut</span><span> q)) = (p, q) {
+</span><span>        </span><span style="color:#b48ead;">let mut</span><span> parents = HashMap::new();
+</span><span>        </span><span style="color:#b48ead;">let mut</span><span> depths = HashMap::new();
+</span><span>        </span><span style="color:#96b5b4;">build_parent</span><span>(root.</span><span style="color:#96b5b4;">clone</span><span>(), </span><span style="color:#d08770;">0</span><span>, None, &amp;</span><span style="color:#b48ead;">mut</span><span> parents, &amp;</span><span style="color:#b48ead;">mut</span><span> depths);
+</span><span>        </span><span style="color:#b48ead;">if let </span><span>(Some(</span><span style="color:#b48ead;">mut</span><span> pd), Some(</span><span style="color:#b48ead;">mut</span><span> qd)) = (depths.</span><span style="color:#96b5b4;">get</span><span>(&amp;(p.</span><span style="color:#96b5b4;">as_ptr</span><span>() as </span><span style="color:#b48ead;">*const </span><span>_)), depths.</span><span style="color:#96b5b4;">get</span><span>(&amp;(q.</span><span style="color:#96b5b4;">as_ptr</span><span>() as </span><span style="color:#b48ead;">*const </span><span>_))) {
+</span><span>            </span><span style="color:#65737e;">// Make sure that pd &lt;= qd
+</span><span>            </span><span style="color:#b48ead;">if</span><span> pd &gt; qd {
+</span><span>                std::mem::swap(&amp;</span><span style="color:#b48ead;">mut</span><span> p, &amp;</span><span style="color:#b48ead;">mut</span><span> q);
+</span><span>                std::mem::swap(&amp;</span><span style="color:#b48ead;">mut</span><span> pd, &amp;</span><span style="color:#b48ead;">mut</span><span> qd);
+</span><span>            }
+</span><span>
+</span><span>            </span><span style="color:#65737e;">// Jump to the same level
+</span><span>            </span><span style="color:#b48ead;">let mut</span><span> i = </span><span style="color:#d08770;">0</span><span>;
+</span><span>            </span><span style="color:#b48ead;">let mut</span><span> d = qd - pd;
+</span><span>            </span><span style="color:#b48ead;">while</span><span> d &gt; </span><span style="color:#d08770;">0 </span><span>{
+</span><span>                </span><span style="color:#b48ead;">if</span><span> d &amp; </span><span style="color:#d08770;">1 </span><span>== </span><span style="color:#d08770;">1 </span><span>{
+</span><span>                    q = parents[&amp;(q.</span><span style="color:#96b5b4;">as_ptr</span><span>() as </span><span style="color:#b48ead;">*const </span><span>_)][i].</span><span style="color:#96b5b4;">clone</span><span>();
+</span><span>                    println!(&quot;</span><span style="color:#a3be8c;">+</span><span style="color:#d08770;">{i}</span><span>&quot;);
+</span><span>                }
+</span><span>
+</span><span>                i += </span><span style="color:#d08770;">1</span><span>;
+</span><span>                d &gt;&gt;= </span><span style="color:#d08770;">1</span><span>;
+</span><span>            }
+</span><span>
+</span><span>            </span><span style="color:#65737e;">// Jump as far as they can, until find the LCA
+</span><span>            </span><span style="color:#b48ead;">while</span><span> p != q {
+</span><span>                </span><span style="color:#65737e;">// p_depth == q_depth, so p_len == q_len
+</span><span>                </span><span style="color:#b48ead;">let</span><span> len = parents[&amp;(p.</span><span style="color:#96b5b4;">as_ptr</span><span>() as </span><span style="color:#b48ead;">*const </span><span>_)].</span><span style="color:#96b5b4;">len</span><span>();
+</span><span>                </span><span style="color:#b48ead;">for</span><span> i in (</span><span style="color:#d08770;">0</span><span>..len).</span><span style="color:#96b5b4;">rev</span><span>() {
+</span><span>                    </span><span style="color:#b48ead;">let</span><span> pp = parents[&amp;(p.</span><span style="color:#96b5b4;">as_ptr</span><span>() as </span><span style="color:#b48ead;">*const </span><span>_)][i].</span><span style="color:#96b5b4;">clone</span><span>();
+</span><span>                    </span><span style="color:#b48ead;">let</span><span> qp = parents[&amp;(q.</span><span style="color:#96b5b4;">as_ptr</span><span>() as </span><span style="color:#b48ead;">*const </span><span>_)][i].</span><span style="color:#96b5b4;">clone</span><span>();
+</span><span>
+</span><span>                    </span><span style="color:#b48ead;">if</span><span> pp != qp || i == </span><span style="color:#d08770;">0 </span><span>{
+</span><span>                        p = pp;
+</span><span>                        q = qp;
+</span><span>                    } 
+</span><span>                }
+</span><span>            }
+</span><span>
+</span><span>            </span><span style="color:#65737e;">// LCA
+</span><span>            Some(p)
+</span><span>        } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>            None
+</span><span>        }
+</span><span>    } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>        None
+</span><span>    }
+</span><span>}
+</span></code></pre>
+
+
+         </main>
+
+         <footer>
+            
+<p class="tagsData">
+
+</p>
+
+            <hr>
+            <div class=footContainer>
+               <div class="footLeft">
+                  <p>Licensed under <a target="_blank" rel="noopener noreferrer" href="https://fr.wikipedia.org/wiki/Licence_MIT">MIT</a><br>
+                     Built with <a target="_blank" rel="noopener noreferrer" href="https://www.getzola.org">Zola</a> using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> theme &amp; <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/veqev">veqev</a> colors.<br>
+                  </p>
+               </div>
+               <div class="footRight">
+                  <!-- Size 46x46 -->
+                  <img class="footGif noStyle" loading="lazy" src="https://i.ibb.co/XYDpfcs/foot.gif" alt="footGif">
+                  <a class="metaData" target="_blank" rel="noopener noreferrer" href="https://refrigerator.navihx.top/atom.xml" title="Subscribe via RSS for updates.">RSS</a>
+               </div>
+            </div>
+         </footer>
+      </div>
+   </body>
+</html>

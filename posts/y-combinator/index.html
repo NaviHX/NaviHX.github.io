@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+      <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+      <meta name="robots" content="index, follow">
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <title>Call a Closure, RECURSIVEly?</title>
+      
+      
+      
+      <meta name="title" content="Call a Closure, RECURSIVEly?">
+      
+      
+      
+      <meta property="og:type" content="website">
+      <meta property="og:url" content="https://refrigerator.navihx.top/posts/y-combinator/">
+      
+      <meta property="og:site_name" content="">
+      
+      
+      <meta property="og:title" content="Call a Closure, RECURSIVEly?">
+      
+      
+      
+      <meta property="og:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://refrigerator.navihx.top/posts/y-combinator/">
+      
+      <meta property="twitter:title" content="Call a Closure, RECURSIVEly?">
+      
+      
+      
+      <meta property="twitter:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      <link rel="canonical" href="https://refrigerator.navihx.top/posts/y-combinator/">
+      
+      <link rel="shortcut icon" type="image/x-icon" href="https://refrigerator.navihx.top/favicon.ico">
+      
+      
+      
+      
+      <link rel="alternate" type="application/atom+xml" title="RSS" href="https://refrigerator.navihx.top/atom.xml">
+      
+      
+      
+      <link rel="stylesheet" href="https://refrigerator.navihx.top/css/style.css"/>
+      
+   </head>
+   <body>
+      <div class="wrapper">
+         <header>
+            
+            <nav class="navBar">
+               
+               
+               
+               <a href="/" >&#x2F;home&#x2F;</a>
+               
+               
+               
+               
+               <a href="/posts" >&#x2F;posts&#x2F;</a>
+               
+               
+
+               <div class="themeSwitch">
+                  <button class="themeButton light" onclick="setTheme('light')" title="Light mode">◐</button>
+                  <button class="themeButton dark" onclick="setTheme('dark')" title="Dark mode">◑</button>
+               </div>
+            </nav>
+            
+
+            <script>
+               const setTheme = (theme) => {
+                   document.documentElement.className = theme;
+                   localStorage.setItem('theme', theme);
+               }
+               const getTheme = () => {
+                   const theme = localStorage.getItem('theme');
+                   theme && setTheme(theme);
+               }
+               getTheme()
+            </script>
+         </header>
+
+         <main>
+            
+
+
+
+
+<h1 id="call-a-closure-recursively">Call a Closure, RECURSIVEly?</h1>
+<p>如果你需要递归调用一个函数，你会怎么做？这还不简单，直接在函数体内调用自己不就行了。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span># rust
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">factorial</span><span>(</span><span style="color:#bf616a;">n</span><span>: </span><span style="color:#b48ead;">i32</span><span>) -&gt; </span><span style="color:#b48ead;">i32 </span><span>{
+</span><span>    </span><span style="color:#b48ead;">if</span><span> i &lt;= </span><span style="color:#d08770;">1 </span><span>{
+</span><span>        </span><span style="color:#d08770;">1
+</span><span>    } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>        n * </span><span style="color:#96b5b4;">factorial</span><span>(n - </span><span style="color:#d08770;">1</span><span>)
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<pre data-lang="racket" style="background-color:#2b303b;color:#c0c5ce;" class="language-racket "><code class="language-racket" data-lang="racket"><span># lisp
+</span><span>&gt; (</span><span style="color:#b48ead;">define</span><span> (</span><span style="color:#8fa1b3;">fact </span><span>n)
+</span><span>    (</span><span style="color:#b48ead;">cond </span><span>((&lt;= n </span><span style="color:#d08770;">1</span><span>) </span><span style="color:#d08770;">1</span><span>)
+</span><span>          (</span><span style="color:#b48ead;">else </span><span>(* n (fact (- n </span><span style="color:#d08770;">1</span><span>))))))
+</span><span>&gt; (fact </span><span style="color:#d08770;">5</span><span>)
+</span><span style="color:#d08770;">120
+</span></code></pre>
+<p>但是如果我们不使用 <code>define</code> ，只用闭包来定义这个函数，这种做法是否会出现问题呢？</p>
+<pre data-lang="racket" style="background-color:#2b303b;color:#c0c5ce;" class="language-racket "><code class="language-racket" data-lang="racket"><span>(</span><span style="color:#b48ead;">lambda </span><span>(n)
+</span><span>  (</span><span style="color:#b48ead;">cond </span><span>((&lt;= n </span><span style="color:#d08770;">1</span><span>) </span><span style="color:#d08770;">1</span><span>)
+</span><span>        (</span><span style="color:#b48ead;">else </span><span>(* n (??? (- n </span><span style="color:#d08770;">1</span><span>))))))
+</span></code></pre>
+<p>当需要递归调用时，我们惊喜地发现，我们无法找到这个函数的名字，也就无从调用。而 Lambda 演算和图灵机是等价的，实际上是可以找到一种方法递归调用的（当然，实际的逻辑关系正好相反，正是因为 Lambda 演算拥有递归的能力才能够图灵等价）。</p>
+<h2 id="hui-diao-han-shu">回调函数？</h2>
+<p>我们很容易想到一个最简单的方法：既然我们在闭包内无法获得这个闭包的名字，那么我们就给这个闭包添加一个参数，接受一个函数。只要这个参数的实参是闭包本身，就可以用这个参数的名字替代闭包，做到递归调用的效果。我们先从 Lisp 入手。</p>
+<pre data-lang="racket" style="background-color:#2b303b;color:#c0c5ce;" class="language-racket "><code class="language-racket" data-lang="racket"><span>&gt; ((</span><span style="color:#b48ead;">lambda </span><span>(n callback)
+</span><span>     (</span><span style="color:#b48ead;">cond </span><span>((&lt;= n </span><span style="color:#d08770;">1</span><span>) </span><span style="color:#d08770;">1</span><span>)
+</span><span>           (</span><span style="color:#b48ead;">else </span><span>(* n (callback (- n </span><span style="color:#d08770;">1</span><span>) callback)))))
+</span><span>   </span><span style="color:#d08770;">5
+</span><span>   (</span><span style="color:#b48ead;">lambda </span><span>(n callback)
+</span><span>     (</span><span style="color:#b48ead;">cond </span><span>((&lt;= n </span><span style="color:#d08770;">1</span><span>) </span><span style="color:#d08770;">1</span><span>)
+</span><span>           (</span><span style="color:#b48ead;">else </span><span>(* n (callback (- n </span><span style="color:#d08770;">1</span><span>) callback))))))
+</span><span style="color:#d08770;">120
+</span></code></pre>
+<p>可以看到，为了递归调用，我们添加了 <code>callback</code> 参数，最后将闭包自身作为 <code>callback</code> 参数进行调用。调用这个函数需要使用类似这样的形式：<code>(fact n fact)</code> 。如果需要不止一个参数（阶乘只需要一个 n ），我们可以将 <code>callback</code> 的参数顺序调整到第一个，同时进行柯里化，就能得到这样的形式： <code>((fn fn) args ...)</code> 。</p>
+<pre data-lang="racket" style="background-color:#2b303b;color:#c0c5ce;" class="language-racket "><code class="language-racket" data-lang="racket"><span>&gt; (((</span><span style="color:#b48ead;">lambda </span><span>(fact)
+</span><span>     (</span><span style="color:#b48ead;">lambda </span><span>(n)
+</span><span>       (</span><span style="color:#b48ead;">cond </span><span>((&lt;= n </span><span style="color:#d08770;">1</span><span>) </span><span style="color:#d08770;">1</span><span>)
+</span><span>             (</span><span style="color:#b48ead;">else </span><span>(* n ((fact fact) (- n </span><span style="color:#d08770;">1</span><span>)))))))
+</span><span>   (</span><span style="color:#b48ead;">lambda </span><span>(fact)
+</span><span>     (</span><span style="color:#b48ead;">lambda </span><span>(n)
+</span><span>       (</span><span style="color:#b48ead;">cond </span><span>((&lt;= n </span><span style="color:#d08770;">1</span><span>) </span><span style="color:#d08770;">1</span><span>)
+</span><span>             (</span><span style="color:#b48ead;">else </span><span>(* n ((fact fact) (- n </span><span style="color:#d08770;">1</span><span>))))))))
+</span><span>   </span><span style="color:#d08770;">5</span><span>)
+</span><span style="color:#d08770;">120
+</span></code></pre>
+<p>对于这种形式 <code>(fn fn)</code> ，我们可以使用 ω 组合子来简化一下。</p>
+<pre data-lang="racket" style="background-color:#2b303b;color:#c0c5ce;" class="language-racket "><code class="language-racket" data-lang="racket"><span># 虽然这里用了 </span><span style="color:#b48ead;">define </span><span>, 但是可以当作是宏的定义
+</span><span># omega = λf . f f
+</span><span>&gt; (</span><span style="color:#b48ead;">define </span><span>omega
+</span><span>    (</span><span style="color:#b48ead;">lambda </span><span>(f)
+</span><span>      (f f)))
+</span><span>&gt; ((omega (</span><span style="color:#b48ead;">lambda </span><span>(fact) (</span><span style="color:#b48ead;">lambda </span><span>(n)
+</span><span>                           (</span><span style="color:#b48ead;">cond </span><span>((&lt;= n </span><span style="color:#d08770;">1</span><span>) </span><span style="color:#d08770;">1</span><span>)
+</span><span>                                 (</span><span style="color:#b48ead;">else </span><span>(* n ((omega fact) (- n </span><span style="color:#d08770;">1</span><span>))))))))
+</span><span>   </span><span style="color:#d08770;">5</span><span>)
+</span><span style="color:#d08770;">120
+</span></code></pre>
+<p>ω 组合子的作用就是将闭包本身作为闭包的第一个参数。这样我们就能在闭包中调用到闭包自己了。</p>
+<p>具体来说，如果我们拥有一个变量 <code>w: w -&gt; a</code> ，它接受与自己类型相同的变量作为第一个参数，我们将其传入 ω 组合子，我们就可以通过 <code>(w w)</code> 得到一个 <code>a</code> ，同时，整个 ω 组合子表达式的结果也是 <code>a</code> 。得益于 ω 组合子，我们获得了给闭包起名字的能力（通过第一个参数）。</p>
+<p>对于 Rust ，我们似乎也可以用同样的方法来解决这个问题。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let </span><span style="color:#8fa1b3;">fact </span><span>= |</span><span style="color:#bf616a;">fact</span><span>: ???, </span><span style="color:#bf616a;">n</span><span>: </span><span style="color:#b48ead;">i32</span><span>| {
+</span><span>    </span><span style="color:#b48ead;">if</span><span> n &lt;= </span><span style="color:#d08770;">1 </span><span>{
+</span><span>        </span><span style="color:#d08770;">1
+</span><span>    } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>        n * </span><span style="color:#96b5b4;">fact</span><span>(fact, n - </span><span style="color:#d08770;">1</span><span>)
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>这里需要解决一个问题，闭包的参数中， <code>fact</code> 的实际类型是什么？ <code>fact</code> 的实际类型是 <code>Self</code> ，其中 <code>Self: Fn(Self, i32) -&gt; i32</code> 。我们可以发现，这实际上一个递归类型，这个递归类型让这个闭包可以无限递归，但是 Rust 无法接受这样一个可以无限递归的类型。因此，我们需要把这个闭包用 <code>Struct</code> 包裹起来，使用它提供的 <code>Self</code> 类型。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">struct </span><span>Wrapper&lt;</span><span style="color:#b48ead;">&#39;a</span><span>, I, O&gt; {
+</span><span>    </span><span style="color:#b48ead;">pub </span><span style="color:#bf616a;">closure</span><span>: &amp;</span><span style="color:#b48ead;">&#39;a</span><span> dyn Fn(&amp;</span><span style="color:#b48ead;">Self</span><span>, I) -&gt; O,
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">impl</span><span>&lt;</span><span style="color:#b48ead;">&#39;a</span><span>, I, O&gt; Wrapper&lt;</span><span style="color:#b48ead;">&#39;a</span><span>, I, O&gt; {
+</span><span>    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">new</span><span>(</span><span style="color:#bf616a;">closure</span><span>: &amp;</span><span style="color:#b48ead;">&#39;a</span><span> dyn Fn(&amp;</span><span style="color:#bf616a;">Self</span><span>, </span><span style="color:#bf616a;">I</span><span>) -&gt; O) -&gt; </span><span style="color:#b48ead;">Self </span><span>{
+</span><span>        </span><span style="color:#b48ead;">Self </span><span>{ closure }
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">call</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#bf616a;">i</span><span>: I) -&gt; O {
+</span><span>        (</span><span style="color:#bf616a;">self</span><span>.closure)(</span><span style="color:#bf616a;">self</span><span>, i)
+</span><span>    }
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span>() {
+</span><span>    </span><span style="color:#b48ead;">let</span><span> fact = Wrapper::new(&amp;|fact: &amp;Wrapper&lt;</span><span style="color:#b48ead;">i32</span><span>, </span><span style="color:#b48ead;">i32</span><span>&gt;, n| {
+</span><span>        </span><span style="color:#b48ead;">if</span><span> n &lt;= </span><span style="color:#d08770;">1 </span><span>{
+</span><span>            </span><span style="color:#d08770;">1
+</span><span>        } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>            n * fact.</span><span style="color:#96b5b4;">call</span><span>(n - </span><span style="color:#d08770;">1</span><span>)
+</span><span>        }
+</span><span>    });
+</span><span>
+</span><span>    println!(&quot;</span><span style="color:#a3be8c;">fact(5) = </span><span style="color:#d08770;">{}</span><span>&quot;, fact.</span><span style="color:#96b5b4;">call</span><span>(</span><span style="color:#d08770;">5</span><span>)); </span><span style="color:#65737e;">// fact(5) = 120
+</span><span>}
+</span></code></pre>
+<p>这里的 <code>Wrapper::call</code> 其实就是 ω 组合子，我们就不需要写 <code>fact.closure(&amp;fact, n)</code> 了。</p>
+<h2 id="geng-jian-ji-de-xing-shi">更简洁的形式</h2>
+<p>虽然我们已经实现了在闭包中递归调用，不过，每次调用都需要使用 ω 组合子或者把函数名写两遍，显得很累赘，形式不够优美(对于 Rust ，我们可以使用 Fn traits 来简化书写方式，以下不讨论)。为了简洁，我们需要将找到一个新的组合子，满足下面的条件：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>((new-combinator f&#39;) n) = ((omega f) n)
+</span><span>其中
+</span><span>f: (f -&gt; a -&gt; b) -&gt; a -&gt; b
+</span><span>f&#39;: f&#39;&#39; -&gt; a -&gt; b
+</span><span>f&#39;&#39;: a -&gt; b
+</span></code></pre>
+<p>这个新的组合子与 ω 组合子的不同点在于， <code>f''</code> 不再需要一个函数作为参数，我们可以直接将 <code>a</code> 作为它的参数来调用，<code>(f'' a) = b</code>。</p>
+<p>我们先写出这个新组合子的参数部分：</p>
+<pre data-lang="racket" style="background-color:#2b303b;color:#c0c5ce;" class="language-racket "><code class="language-racket" data-lang="racket"><span>(</span><span style="color:#b48ead;">lambda </span><span>(f)
+</span><span>  (wrap f))
+</span></code></pre>
+<p>我们现在还不能知道如何实现 <code>wrap</code> 。但可以确定的一点是 <code>(wrap ...)</code> 的结果是一个 <code>a -&gt; b</code> ，我们可以从 <code>new-combinator</code> 的签名得知。既然 <code>(wrap ...)</code> 的结果可以直接作为 <code>f''</code> ，我们不妨对这一点加以利用，使用 ω 组合子，让这个结果在 <code>wrap</code> 内部可用。</p>
+<pre data-lang="racket" style="background-color:#2b303b;color:#c0c5ce;" class="language-racket "><code class="language-racket" data-lang="racket"><span>(</span><span style="color:#b48ead;">lambda </span><span>(f)
+</span><span>  (omega (</span><span style="color:#b48ead;">lambda </span><span>(g)
+</span><span>    (f (g g)))))
+</span></code></pre>
+<p>基于 ω 组合子的性质，我们可以通过 <code>(g g)</code> 获取这个闭包的结果（ <code>g</code> 实际上只有一个参数），也就是我们需要的 <code>f''</code>。不过，现在的组合子我们不能直接用在部分代码中——对于严格求值的语言，在调用函数前，需要先计算出 <code>(g g)</code> 的值，这是一个无限递归的过程。我们需要一个延迟计算的方式。在 <code>Racket</code> 中有两种方法：</p>
+<ul>
+<li>使用 Lazy Lambda ，将参数求值延迟到实际使用参数的时候。对于这种方式，直接上面的定义就行了。</li>
+<li>在用一个 Lambda 包裹住 <code>(g g)</code> 的求值部分。</li>
+</ul>
+<p>对于第二种方式，实现如下。</p>
+<pre data-lang="racket" style="background-color:#2b303b;color:#c0c5ce;" class="language-racket "><code class="language-racket" data-lang="racket"><span>(</span><span style="color:#b48ead;">define </span><span>Y
+</span><span>  (λ (f)
+</span><span>    (ω (λ (g)
+</span><span>         (f (λ (x) ((g g) x)))))))
+</span></code></pre>
+<p>这里用一个 <code>a -&gt; b</code> 闭包包裹住了 <code>(g g)</code> ，这样，只有在传递一个 <code>a</code> 时才会触发 <code>(g g)</code> 的求值。这就是大名鼎鼎的 Y 组合子，它赋予了 Lambda 演算递归的能力，是一个非常强大的组合子。某些 Lisp 方言利用它实现了函数定义，<a href="https://github.com/jarcane/heresy/blob/master/lib/theory.rkt">比如这门 Heresy 方言</a>。</p>
+<p>我们可以试试 Y 组合子的威力。</p>
+<pre data-lang="racket" style="background-color:#2b303b;color:#c0c5ce;" class="language-racket "><code class="language-racket" data-lang="racket"><span>&gt; (</span><span style="color:#b48ead;">define </span><span>ω
+</span><span>    (λ (f)
+</span><span>      (f f)))
+</span><span>&gt; (</span><span style="color:#b48ead;">define </span><span>Y
+</span><span>    (λ (target)
+</span><span>      (ω (λ (f)
+</span><span>           (target (λ (x) ((ω f) x)))))))
+</span><span>&gt; (</span><span style="color:#b48ead;">define </span><span>factorial
+</span><span>    (Y (</span><span style="color:#b48ead;">lambda </span><span>(factorial)
+</span><span>         (</span><span style="color:#b48ead;">lambda </span><span>(n)
+</span><span>           (</span><span style="color:#b48ead;">cond </span><span>((&lt;= n </span><span style="color:#d08770;">1</span><span>) </span><span style="color:#d08770;">1</span><span>)
+</span><span>                 (</span><span style="color:#b48ead;">else </span><span>(* n (factorial (- n </span><span style="color:#d08770;">1</span><span>)))))))))
+</span><span>&gt; (factorial </span><span style="color:#d08770;">5</span><span>)
+</span><span style="color:#d08770;">120</span><span> # TADAA!
+</span></code></pre>
+<p>Y 组合子的形式定义如下：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>ω = λf . f f
+</span><span>Y = λ f . ω (λ g . f (ω g))
+</span><span>  = λ f . (λ g . f (g g)) (λ g . f (g g))
+</span></code></pre>
+
+
+         </main>
+
+         <footer>
+            
+<p class="tagsData">
+
+</p>
+
+            <hr>
+            <div class=footContainer>
+               <div class="footLeft">
+                  <p>Licensed under <a target="_blank" rel="noopener noreferrer" href="https://fr.wikipedia.org/wiki/Licence_MIT">MIT</a><br>
+                     Built with <a target="_blank" rel="noopener noreferrer" href="https://www.getzola.org">Zola</a> using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> theme &amp; <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/veqev">veqev</a> colors.<br>
+                  </p>
+               </div>
+               <div class="footRight">
+                  <!-- Size 46x46 -->
+                  <img class="footGif noStyle" loading="lazy" src="https://i.ibb.co/XYDpfcs/foot.gif" alt="footGif">
+                  <a class="metaData" target="_blank" rel="noopener noreferrer" href="https://refrigerator.navihx.top/atom.xml" title="Subscribe via RSS for updates.">RSS</a>
+               </div>
+            </div>
+         </footer>
+      </div>
+   </body>
+</html>
