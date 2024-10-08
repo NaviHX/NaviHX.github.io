@@ -32,7 +32,7 @@ fn single_number(nums: &[i32]) -> i32 {
 
 下面来考虑上面问题的一个变式。
 
-给你一个非空整数数组 nums 其长度为 2n - 1 ，只会出现 0..n 的数字，除了某个元素出现两次以外，其余每个元素均只出现一次。找出那个只出现了两次的元素。
+给你一个非空整数数组 nums 其长度为 n + 1 ，只会出现 0..n 的数字，除了某个元素出现两次以外，其余每个元素均只出现一次。找出那个只出现了两次的元素。
 
 ## Solution
 
@@ -42,7 +42,7 @@ fn single_number(nums: &[i32]) -> i32 {
 
 ```rust
 fn double_number(nums: &[i32]) -> i32 {
-    let n = (nums.len() + 1) >> 1;
+    let n = nums.len - 1;
     nums.into_iter().copied().chain(0..n as i32).fold(0, |a, b| a ^ b)
 }
 ```
