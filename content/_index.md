@@ -21,7 +21,7 @@ Piracist / 海賊愛好家
 
 和我保持连线。 / Stay wired with me.
 
-- 密钥指纹 / GPG Fingerprint: [0x3FC094A92F52A8604E10DEBA6953875703120633](https://keys.openpgp.org/search?q=3FC094A92F52A8604E10DEBA6953875703120633)
+- 密钥指纹 / GPG Fingerprint: [0x90581A5DA92ACD6AC7969028DDD2A1977128D536](https://keys.openpgp.org/search?q=90581A5DA92ACD6AC7969028DDD2A1977128D536)
 - 电子邮件 / Email: [navihex1412@gmail.com](mailto:navihex1412@gmail.com)
 - 即时消息 / Matrix: [navi_horselover@matrix.org](https://matrix.to/#/@navi_horselover:matrix.org)
 
