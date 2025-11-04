@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+      <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+      <meta name="robots" content="index, follow">
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <title>Longest Palindrome Substring</title>
+      
+      
+      
+      <meta name="title" content="Longest Palindrome Substring">
+      
+      
+      
+      <meta property="og:type" content="website">
+      <meta property="og:url" content="https://refrigerator.navihx.top/posts/longest-palindrome/">
+      
+      <meta property="og:site_name" content="">
+      
+      
+      <meta property="og:title" content="Longest Palindrome Substring">
+      
+      
+      
+      <meta property="og:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://refrigerator.navihx.top/posts/longest-palindrome/">
+      
+      <meta property="twitter:title" content="Longest Palindrome Substring">
+      
+      
+      
+      <meta property="twitter:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      <link rel="canonical" href="https://refrigerator.navihx.top/posts/longest-palindrome/">
+      
+      <link rel="shortcut icon" type="image/x-icon" href="https://refrigerator.navihx.top/favicon.ico">
+      
+      
+      
+      
+      <link rel="alternate" type="application/atom+xml" title="RSS" href="https://refrigerator.navihx.top/atom.xml">
+      
+      
+      
+      <link rel="stylesheet" href="https://refrigerator.navihx.top/css/style.css"/>
+      
+   </head>
+   <body>
+      <div class="wrapper">
+         <header>
+            
+            <nav class="navBar">
+               
+               
+               
+               <a href="/" >&#x2F;home&#x2F;</a>
+               
+               
+               
+               
+               <a href="/posts" >&#x2F;posts&#x2F;</a>
+               
+               
+
+               <div class="themeSwitch">
+                  <button class="themeButton light" onclick="setTheme('light')" title="Light mode">◐</button>
+                  <button class="themeButton dark" onclick="setTheme('dark')" title="Dark mode">◑</button>
+               </div>
+            </nav>
+            
+
+            <script>
+               const setTheme = (theme) => {
+                   document.documentElement.className = theme;
+                   localStorage.setItem('theme', theme);
+               }
+               const getTheme = () => {
+                   const theme = localStorage.getItem('theme');
+                   theme && setTheme(theme);
+               }
+               getTheme()
+            </script>
+         </header>
+
+         <main>
+            
+
+
+
+
+<h1 id="how-to-find-the-longest-palindrome-substring">How to Find the Longest Palindrome Substring</h1>
+<p><a href="https://leetcode.cn/problems/longest-palindromic-substring/">题目链接</a></p>
+<p>曾经会的算法，因为太久没做算法题，已经忘了。在这里留一下笔记。</p>
+<h2 id="po-su-de-zuo-fa">朴素的做法</h2>
+<p>对于一个回文字符串中心 S[c]，如果它的半径是 R ，必须满足</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>S[c - i] == S[c + i], 0 &lt;= i &lt;= R
+</span></code></pre>
+<p>所以如果我们需要知道以字符串中的任何一个位置作为中心的回文串的最大长度，只需要利用扩散的方法，找到第一个不相等的位置，就能得到回文串的半径。如果要求一个字符串的最长回文子串，只需要求出每个位置为中心的回文串的半径，选取最大者即可。</p>
+<p>不过，这种做法的时间复杂度为 O(n^2) 。</p>
+<h2 id="li-yong-yi-jing-ji-suan-de-hui-wen-ban-jing">利用已经计算的回文半径</h2>
+<p>如果我们能够利用之前已经获得的回文半径，是否可以加速计算的过程。在回答这个问题前，我们先来观察一下回文串的性质。</p>
+<p>对于一个回文串中心 S[c] ，如果它的回文半径为 R （ R &gt; 0 ）</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>......A......
+</span></code></pre>
+<p>比如上图所示的字符串，它的中心位置 c = 6 处的字符为 A ，回文半径为 6 。假设在中心的左侧子串中包含了一个更小的回文串</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>.ABA..A...B..
+</span></code></pre>
+<p>左侧的子串 ABA 是一个回文串，中心在 c = 2 处。由于回文串的性质可以得知，在原字符串的索引 10 处也应该有一个 B 。如果我们此时已经知道 c = 6 处的回文半径，现在需要计算 c = 10 处的回文半径，我们是否需要从回文半径 R = 0 开始进行扩散，逐个匹配字符？</p>
+<p>注意到在第一节中提到的性质，距离回文中心相同距离的两侧的字符应该是相等的。这意味着在上面提到的例子中，回文中心 c = 10 处的回文半径至少是 1 —— 根据回文串的性质，这个字符串应该为 <code>.ABA..A..ABA.</code> ；同时回文半径最多只能为 1 —— 因为 c = 2 处的回文半径为 1 ，已经不能再扩散了。因此，当一个较大的回文串「完全」包含了当前的回文子串时，它的回文半径与它的关于回文中心的位置的回文半径相同。</p>
+<h2 id="zhong-xin-zai-liang-ge-zi-fu-zhi-jian">中心在两个字符之间</h2>
+<p>只要在原字符串的每两个字符之间插入一个相同的无关字符即可。</p>
+<h2 id="te-shu-qing-kuang">特殊情况</h2>
+<p>现在来考虑这样一种情况：根据如上的算法，如果现在正在计算的回文中心的对称点的回文串左侧的索引与大回文串的左侧索引相同，像下面这种情况：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>ABA.C.ABA
+</span></code></pre>
+<p>这时我们还能保证以右侧 B 为中心的回文串的回文半径只能为 1 吗？显然不能。此时索引为 9 的位置已经超出了大回文串的范围，已经失去了之前的信息，我们只能确定回文半径的最小值为 1 ，而不能确定最大值，必须进行扩散来获取准确值。</p>
+<p>那么如果对称点的回文半径超出了大回文串的范围呢？由于失去了大回文串的限制，我们不能保证超出范围的部分依旧满足回文的条件，只能截取在大回文串中的部分。</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>A[BA.C.AB]?
+</span></code></pre>
+<p>比如上面这个例子，左侧 B 的回文半径为 1 ，但是不能保证右侧 ? 位置的字符为 A ，所以也只能从包含在大回文串的部分，也就是回文半径为 0 开始扩散。</p>
+<h2 id="shi-li-dai-ma">示例代码</h2>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">longest_palindrome</span><span>(</span><span style="color:#bf616a;">s</span><span>: String) -&gt; String {
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">expand</span><span>(</span><span style="color:#bf616a;">s</span><span>: &amp;</span><span style="color:#b48ead;">str</span><span>, </span><span style="color:#bf616a;">center</span><span>: </span><span style="color:#b48ead;">usize</span><span>, </span><span style="color:#bf616a;">skip</span><span>: </span><span style="color:#b48ead;">usize</span><span>) -&gt; </span><span style="color:#b48ead;">usize </span><span>{
+</span><span>        assert!(center &gt;= skip);
+</span><span>
+</span><span>        </span><span style="color:#b48ead;">let </span><span>(</span><span style="color:#b48ead;">mut</span><span> left, </span><span style="color:#b48ead;">mut</span><span> right) = (center - skip, center + skip);
+</span><span>        </span><span style="color:#b48ead;">let</span><span> s = s.</span><span style="color:#96b5b4;">as_bytes</span><span>();
+</span><span>        </span><span style="color:#b48ead;">let</span><span> len = s.</span><span style="color:#96b5b4;">len</span><span>();
+</span><span>        </span><span style="color:#b48ead;">loop </span><span>{
+</span><span>            </span><span style="color:#b48ead;">if</span><span> left &gt; </span><span style="color:#d08770;">0 </span><span>&amp;&amp; right &lt; len - </span><span style="color:#d08770;">1 </span><span>&amp;&amp; s[left - </span><span style="color:#d08770;">1</span><span>] == s[right + </span><span style="color:#d08770;">1</span><span>] {
+</span><span>                left -= </span><span style="color:#d08770;">1</span><span>;
+</span><span>                right += </span><span style="color:#d08770;">1</span><span>;
+</span><span>            } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>                </span><span style="color:#b48ead;">break </span><span>(right - left) &gt;&gt; </span><span style="color:#d08770;">1</span><span>;
+</span><span>            }
+</span><span>        }
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">let</span><span> ns: String = &quot;</span><span style="color:#a3be8c;">#</span><span>&quot;
+</span><span>        .</span><span style="color:#96b5b4;">chars</span><span>()
+</span><span>        .</span><span style="color:#96b5b4;">chain</span><span>(s.</span><span style="color:#96b5b4;">chars</span><span>().</span><span style="color:#96b5b4;">flat_map</span><span>(|</span><span style="color:#bf616a;">c</span><span>| [c, &#39;</span><span style="color:#a3be8c;">#</span><span>&#39;]))
+</span><span>        .</span><span style="color:#96b5b4;">collect</span><span>();
+</span><span>    </span><span style="color:#b48ead;">let</span><span> len = ns.</span><span style="color:#96b5b4;">len</span><span>();
+</span><span>    </span><span style="color:#b48ead;">let mut</span><span> radius = vec![</span><span style="color:#d08770;">0</span><span>; len];
+</span><span>    </span><span style="color:#b48ead;">let mut</span><span> center = </span><span style="color:#d08770;">0</span><span>; </span><span style="color:#65737e;">// center with max right bound
+</span><span>    </span><span style="color:#b48ead;">let mut</span><span> right = </span><span style="color:#d08770;">0</span><span>; </span><span style="color:#65737e;">// max right bound = center + radius[center]
+</span><span>    </span><span style="color:#b48ead;">let </span><span>(</span><span style="color:#b48ead;">mut</span><span> ans_pos, </span><span style="color:#b48ead;">mut</span><span> ans_radius) = (</span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">0</span><span>);
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">for</span><span> i in </span><span style="color:#d08770;">1</span><span>..len {
+</span><span>        </span><span style="color:#b48ead;">let</span><span> arm = </span><span style="color:#b48ead;">if</span><span> i &gt; right {
+</span><span>            </span><span style="color:#96b5b4;">expand</span><span>(&amp;ns, i, </span><span style="color:#d08770;">0</span><span>)
+</span><span>        } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>            </span><span style="color:#b48ead;">let</span><span> i_sym = center - (i - center);
+</span><span>            </span><span style="color:#b48ead;">let</span><span> skip = radius[i_sym].</span><span style="color:#96b5b4;">min</span><span>(right - i);
+</span><span>            </span><span style="color:#96b5b4;">expand</span><span>(&amp;ns, i, skip)
+</span><span>        };
+</span><span>        radius[i] = arm;
+</span><span>
+</span><span>        </span><span style="color:#b48ead;">if</span><span> right &lt; i + arm {
+</span><span>            center = i;
+</span><span>            right = i + arm;
+</span><span>        }
+</span><span>
+</span><span>        </span><span style="color:#b48ead;">if</span><span> arm &gt; ans_radius {
+</span><span>            ans_pos = i;
+</span><span>            ans_radius = arm;
+</span><span>        }
+</span><span>    }
+</span><span>
+</span><span>    ns[(ans_pos - ans_radius)..(ans_pos + ans_radius + </span><span style="color:#d08770;">1</span><span>)]
+</span><span>        .</span><span style="color:#96b5b4;">chars</span><span>()
+</span><span>        .</span><span style="color:#96b5b4;">filter</span><span>(|&amp;</span><span style="color:#bf616a;">c</span><span>| c != &#39;</span><span style="color:#a3be8c;">#</span><span>&#39;)
+</span><span>        .</span><span style="color:#96b5b4;">collect</span><span>()
+</span><span>}
+</span></code></pre>
+
+
+         </main>
+
+         <footer>
+            
+<p class="tagsData">
+
+</p>
+
+            <hr>
+            <div class=footContainer>
+               <div class="footLeft">
+                  <p>Licensed under <a target="_blank" rel="noopener noreferrer" href="https://fr.wikipedia.org/wiki/Licence_MIT">MIT</a><br>
+                     Built with <a target="_blank" rel="noopener noreferrer" href="https://www.getzola.org">Zola</a> using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> theme &amp; <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/veqev">veqev</a> colors.<br>
+                  </p>
+               </div>
+               <div class="footRight">
+                  <!-- Size 46x46 -->
+                  <img class="footGif noStyle" loading="lazy" src="https://i.ibb.co/XYDpfcs/foot.gif" alt="footGif">
+                  <a class="metaData" target="_blank" rel="noopener noreferrer" href="https://refrigerator.navihx.top/atom.xml" title="Subscribe via RSS for updates.">RSS</a>
+               </div>
+            </div>
+         </footer>
+      </div>
+   </body>
+</html>

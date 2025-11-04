@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+      <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+      <meta name="robots" content="index, follow">
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <title>Single Number</title>
+      
+      
+      
+      <meta name="title" content="Single Number">
+      
+      
+      
+      <meta property="og:type" content="website">
+      <meta property="og:url" content="https://refrigerator.navihx.top/posts/single-number/">
+      
+      <meta property="og:site_name" content="">
+      
+      
+      <meta property="og:title" content="Single Number">
+      
+      
+      
+      <meta property="og:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://refrigerator.navihx.top/posts/single-number/">
+      
+      <meta property="twitter:title" content="Single Number">
+      
+      
+      
+      <meta property="twitter:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      <link rel="canonical" href="https://refrigerator.navihx.top/posts/single-number/">
+      
+      <link rel="shortcut icon" type="image/x-icon" href="https://refrigerator.navihx.top/favicon.ico">
+      
+      
+      
+      
+      <link rel="alternate" type="application/atom+xml" title="RSS" href="https://refrigerator.navihx.top/atom.xml">
+      
+      
+      
+      <link rel="stylesheet" href="https://refrigerator.navihx.top/css/style.css"/>
+      
+   </head>
+   <body>
+      <div class="wrapper">
+         <header>
+            
+            <nav class="navBar">
+               
+               
+               
+               <a href="/" >&#x2F;home&#x2F;</a>
+               
+               
+               
+               
+               <a href="/posts" >&#x2F;posts&#x2F;</a>
+               
+               
+
+               <div class="themeSwitch">
+                  <button class="themeButton light" onclick="setTheme('light')" title="Light mode">◐</button>
+                  <button class="themeButton dark" onclick="setTheme('dark')" title="Dark mode">◑</button>
+               </div>
+            </nav>
+            
+
+            <script>
+               const setTheme = (theme) => {
+                   document.documentElement.className = theme;
+                   localStorage.setItem('theme', theme);
+               }
+               const getTheme = () => {
+                   const theme = localStorage.getItem('theme');
+                   theme && setTheme(theme);
+               }
+               getTheme()
+            </script>
+         </header>
+
+         <main>
+            
+
+
+
+
+<h1 id="zhi-chu-xian-yi-ci-de-shu-zi">只出现一次的数字</h1>
+<p>给你一个非空整数数组 nums ，除了某个元素只出现一次以外，其余每个元素均出现两次。找出那个只出现了一次的元素。</p>
+<p>必须使用线性时间，常量空间的算法。</p>
+<h2 id="solution">Solution</h2>
+<p>根据异或的性质，将所有元素异或后的结果为只出现一次的元素，因为</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>x ^ x == 0
+</span></code></pre>
+<p>且异或满足交换律与结合律，只需要将相同的元素移动到相同位置即可证明。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">single_number</span><span>(</span><span style="color:#bf616a;">nums</span><span>: &amp;[</span><span style="color:#b48ead;">i32</span><span>]) -&gt; </span><span style="color:#b48ead;">i32 </span><span>{
+</span><span>    assert!(!nums.</span><span style="color:#96b5b4;">is_empty</span><span>());
+</span><span>    nums.</span><span style="color:#96b5b4;">into_iter</span><span>().</span><span style="color:#96b5b4;">fold</span><span>(</span><span style="color:#d08770;">0</span><span>, |</span><span style="color:#bf616a;">a</span><span>, </span><span style="color:#bf616a;">b</span><span>| a ^ b)
+</span><span>}
+</span></code></pre>
+<h1 id="chu-xian-liang-ci-de-shu-zi">出现两次的数字</h1>
+<p>下面来考虑上面问题的一个变式。</p>
+<p>给你一个非空整数数组 nums 其长度为 n + 1 ，只会出现 0..n 的数字，除了某个元素出现两次以外，其余每个元素均只出现一次。找出那个只出现了两次的元素。</p>
+<h2 id="solution-1">Solution</h2>
+<p>这个问题拥有更强的条件：只会出现 0..n 的数字。</p>
+<p>因为我们知道数组中出现的元素范围，我们只需要将 nums 所有元素的异或再与 0..n 的所有数异或一遍。这样可以使得原本出现两次的元素现在出现了三次（异或结果为本身），原本出现一次的元素出现了两次（异或结果为 0 ）。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">double_number</span><span>(</span><span style="color:#bf616a;">nums</span><span>: &amp;[</span><span style="color:#b48ead;">i32</span><span>]) -&gt; </span><span style="color:#b48ead;">i32 </span><span>{
+</span><span>    </span><span style="color:#b48ead;">let</span><span> n = nums.len - </span><span style="color:#d08770;">1</span><span>;
+</span><span>    nums.</span><span style="color:#96b5b4;">into_iter</span><span>().</span><span style="color:#96b5b4;">copied</span><span>().</span><span style="color:#96b5b4;">chain</span><span>(</span><span style="color:#d08770;">0</span><span>..n as </span><span style="color:#b48ead;">i32</span><span>).</span><span style="color:#96b5b4;">fold</span><span>(</span><span style="color:#d08770;">0</span><span>, |</span><span style="color:#bf616a;">a</span><span>, </span><span style="color:#bf616a;">b</span><span>| a ^ b)
+</span><span>}
+</span></code></pre>
+<h1 id="sneaky-numbers">Sneaky Numbers</h1>
+<p><a href="https://leetcode.cn/problems/the-two-sneaky-numbers-of-digitville/description/">原题目</a></p>
+<p>一个数字列表 nums，其中包含从 0 到 n - 1 的整数。每个数字本应只出现一次，然而，有两个顽皮的数字额外多出现了一次，使得列表变得比正常情况下更长。请你找出这两个顽皮的数字。</p>
+<h2 id="solution-2">Solution</h2>
+<p>相比于前一个题目，这一个题目中出现了两次的元素有两个。也就是说假设出现两次的元素分别为 a, b ，参考上一个题目的方法，所有元素的异或结果应为 a ^ b 。</p>
+<p>因为这 <code>a != b</code> ，所以 <code>a ^ b</code> 的结果中必定至少有一个 <code>1</code> bit ，假设只保留其中最低位的 <code>1</code> bit 的数为 lowbit 。我们可以将列表中的所有元素分为两类：lowbit 处为 1 的数以及 lowbit 处为 0 的数。分别将两类数异或的结果就是所求的元素。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">sneaky_numbers</span><span>(</span><span style="color:#bf616a;">nums</span><span>: &amp;[</span><span style="color:#b48ead;">i32</span><span>]) -&gt; Vec&lt;</span><span style="color:#b48ead;">i32</span><span>&gt; {
+</span><span>    </span><span style="color:#b48ead;">let</span><span> n = nums.</span><span style="color:#96b5b4;">len</span><span>() - </span><span style="color:#d08770;">2</span><span>;
+</span><span>    </span><span style="color:#b48ead;">let</span><span> sum = nums.</span><span style="color:#96b5b4;">into_iter</span><span>().</span><span style="color:#96b5b4;">copied</span><span>().</span><span style="color:#96b5b4;">chain</span><span>(</span><span style="color:#d08770;">0</span><span>..n as </span><span style="color:#b48ead;">i32</span><span>).</span><span style="color:#96b5b4;">fold</span><span>(</span><span style="color:#d08770;">0</span><span>, |</span><span style="color:#bf616a;">a</span><span>, </span><span style="color:#bf616a;">b</span><span>| a ^ b);
+</span><span>    </span><span style="color:#b48ead;">let</span><span> lowbit = sum &amp; -sum;
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">let mut</span><span> ans = vec![</span><span style="color:#d08770;">0</span><span>; </span><span style="color:#d08770;">2</span><span>];
+</span><span>    </span><span style="color:#b48ead;">for</span><span> num in nums.</span><span style="color:#96b5b4;">into_iter</span><span>().</span><span style="color:#96b5b4;">copied</span><span>().</span><span style="color:#96b5b4;">chain</span><span>(</span><span style="color:#d08770;">0</span><span>..n as </span><span style="color:#b48ead;">i32</span><span>) {
+</span><span>        </span><span style="color:#b48ead;">let</span><span> id = </span><span style="color:#b48ead;">if</span><span> num &amp; lowbit == </span><span style="color:#d08770;">0 </span><span>{ </span><span style="color:#d08770;">0 </span><span>} </span><span style="color:#b48ead;">else </span><span>{ </span><span style="color:#d08770;">1 </span><span>};
+</span><span>        ans[id] ^= num;
+</span><span>    }
+</span><span>
+</span><span>    ans
+</span><span>}
+</span></code></pre>
+
+
+         </main>
+
+         <footer>
+            
+<p class="tagsData">
+
+</p>
+
+            <hr>
+            <div class=footContainer>
+               <div class="footLeft">
+                  <p>Licensed under <a target="_blank" rel="noopener noreferrer" href="https://fr.wikipedia.org/wiki/Licence_MIT">MIT</a><br>
+                     Built with <a target="_blank" rel="noopener noreferrer" href="https://www.getzola.org">Zola</a> using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> theme &amp; <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/veqev">veqev</a> colors.<br>
+                  </p>
+               </div>
+               <div class="footRight">
+                  <!-- Size 46x46 -->
+                  <img class="footGif noStyle" loading="lazy" src="https://i.ibb.co/XYDpfcs/foot.gif" alt="footGif">
+                  <a class="metaData" target="_blank" rel="noopener noreferrer" href="https://refrigerator.navihx.top/atom.xml" title="Subscribe via RSS for updates.">RSS</a>
+               </div>
+            </div>
+         </footer>
+      </div>
+   </body>
+</html>

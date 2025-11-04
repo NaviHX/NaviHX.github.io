@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+      <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+      <meta name="robots" content="index, follow">
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <title>Prefix-Sum of Prefix-Sum of Ones</title>
+      
+      
+      
+      <meta name="title" content="Prefix-Sum of Prefix-Sum of Ones">
+      
+      
+      
+      <meta property="og:type" content="website">
+      <meta property="og:url" content="https://refrigerator.navihx.top/posts/prefix-sum-of-prefix-sum/">
+      
+      <meta property="og:site_name" content="">
+      
+      
+      <meta property="og:title" content="Prefix-Sum of Prefix-Sum of Ones">
+      
+      
+      
+      <meta property="og:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://refrigerator.navihx.top/posts/prefix-sum-of-prefix-sum/">
+      
+      <meta property="twitter:title" content="Prefix-Sum of Prefix-Sum of Ones">
+      
+      
+      
+      <meta property="twitter:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      <link rel="canonical" href="https://refrigerator.navihx.top/posts/prefix-sum-of-prefix-sum/">
+      
+      <link rel="shortcut icon" type="image/x-icon" href="https://refrigerator.navihx.top/favicon.ico">
+      
+      
+      
+      
+      <link rel="alternate" type="application/atom+xml" title="RSS" href="https://refrigerator.navihx.top/atom.xml">
+      
+      
+      
+      <link rel="stylesheet" href="https://refrigerator.navihx.top/css/style.css"/>
+      
+   </head>
+   <body>
+      <div class="wrapper">
+         <header>
+            
+            <nav class="navBar">
+               
+               
+               
+               <a href="/" >&#x2F;home&#x2F;</a>
+               
+               
+               
+               
+               <a href="/posts" >&#x2F;posts&#x2F;</a>
+               
+               
+
+               <div class="themeSwitch">
+                  <button class="themeButton light" onclick="setTheme('light')" title="Light mode">◐</button>
+                  <button class="themeButton dark" onclick="setTheme('dark')" title="Dark mode">◑</button>
+               </div>
+            </nav>
+            
+
+            <script>
+               const setTheme = (theme) => {
+                   document.documentElement.className = theme;
+                   localStorage.setItem('theme', theme);
+               }
+               const getTheme = () => {
+                   const theme = localStorage.getItem('theme');
+                   theme && setTheme(theme);
+               }
+               getTheme()
+            </script>
+         </header>
+
+         <main>
+            
+
+
+
+
+<h1 id="prefix-sum-of-prefix-sum-of-ones">Prefix-Sum of Prefix-Sum of Ones</h1>
+<p>给定两个给定数组 A 和 B ，从这两个数组各取一个元素可以组成一个坐标 (x, y) 。现以这种方式获得两个坐标 P1 (x1, y1) 和 P2 (x2, y2) ，求有多少种取法，使得 x2 &lt;= x1 ，y2 &lt;= y1 。</p>
+<h1 id="solution">Solution</h1>
+<p>如果我们分别将两个数组从小到大排序，并分别以 i 和 j 来索引两个数组，那么假设我们选定了 i 和 j 索引到的元素组成坐标，很显然同样使用 i ，j 索引的元素组成的坐标满足条件。同时我们知道，i - 1 和 j - 1 索引到的元素一定比 i 和 j 索引的元素小，所以我们可以这样计算对于 i 和 j 满足条件的数量：</p>
+<pre data-lang="haskell" style="background-color:#2b303b;color:#c0c5ce;" class="language-haskell "><code class="language-haskell" data-lang="haskell"><span style="color:#65737e;">-- f 计算对于 i j 满足条件的值
+</span><span>
+</span><span style="color:#65737e;">-- 很显然，i j 本身一定满足条件
+</span><span>f </span><span style="color:#d08770;">0 0 </span><span>= </span><span style="color:#d08770;">1
+</span><span>
+</span><span style="color:#65737e;">-- 对于边界，我们只能累加它的左边或者下面
+</span><span>f i </span><span style="color:#d08770;">0 </span><span>= </span><span style="color:#d08770;">1 </span><span>+ (f (i - </span><span style="color:#d08770;">1</span><span>) </span><span style="color:#d08770;">0</span><span>)
+</span><span>f </span><span style="color:#d08770;">0</span><span> j = </span><span style="color:#d08770;">1 </span><span>+ (f </span><span style="color:#d08770;">0</span><span> (j - </span><span style="color:#d08770;">1</span><span>))
+</span><span>
+</span><span style="color:#65737e;">-- 注意，这里需要减去重复计算的部分
+</span><span>f i j = </span><span style="color:#d08770;">1 </span><span>+ (f (i - </span><span style="color:#d08770;">1</span><span>) j) + (f i (j - </span><span style="color:#d08770;">1</span><span>)) - (f (i - </span><span style="color:#d08770;">1</span><span>) (j - </span><span style="color:#d08770;">1</span><span>))
+</span></code></pre>
+<p>注意到这其实是一个二维前缀和，每一个位置的元素都是 1 。现在我们对这些式子进行化简。</p>
+<pre data-lang="haskell" style="background-color:#2b303b;color:#c0c5ce;" class="language-haskell "><code class="language-haskell" data-lang="haskell"><span style="color:#65737e;">-- 第一个式子不需要化简
+</span><span>f&#39; </span><span style="color:#d08770;">0 0 </span><span>= </span><span style="color:#d08770;">1
+</span><span>
+</span><span style="color:#65737e;">-- 对于边界，实际上就是累加 1
+</span><span>f&#39; i </span><span style="color:#d08770;">0 </span><span>= i + </span><span style="color:#d08770;">1
+</span><span>f&#39; </span><span style="color:#d08770;">0</span><span> j = j + </span><span style="color:#d08770;">1
+</span><span>
+</span><span style="color:#65737e;">-- 这里需要一些技巧
+</span><span>f&#39; i j = </span><span style="color:#d08770;">1 </span><span>+ (f (i - </span><span style="color:#d08770;">1</span><span>) j) + (f i (j - </span><span style="color:#d08770;">1</span><span>)) - (f (i - </span><span style="color:#d08770;">1</span><span>) (j - </span><span style="color:#d08770;">1</span><span>))
+</span><span style="color:#65737e;">-- 注意到 i j 处的前缀和实际上是上一行的前缀和，加上这一行的和
+</span><span style="color:#65737e;">-- 本行的和为 i + 1
+</span><span>= (i + </span><span style="color:#d08770;">1</span><span>) + (f&#39; (i - </span><span style="color:#d08770;">1</span><span>) j)
+</span><span style="color:#65737e;">-- 在 j 不变的情况下，每一行的和实际上都是 i + 1
+</span><span>= (i + </span><span style="color:#d08770;">1</span><span>) * (j + </span><span style="color:#d08770;">1</span><span>)
+</span></code></pre>
+<p>化简得到的结果为 <code>f i j = (i + 1) * (j + 1)</code> ，对于边界情况同样满足。接下来我们需要进行下一步：计算对于 i j ，求所有 i' &lt;= i , j' &lt;= j 的所有满足条件的值之和。首先我们给出前缀和的一般形式：</p>
+<pre data-lang="haskell" style="background-color:#2b303b;color:#c0c5ce;" class="language-haskell "><code class="language-haskell" data-lang="haskell"><span style="color:#65737e;">-- func 是计算 i j 处的值的函数
+</span><span>presum </span><span style="color:#d08770;">0 0</span><span> func = func </span><span style="color:#d08770;">0 0
+</span><span>presum i </span><span style="color:#d08770;">0</span><span> func = (func i </span><span style="color:#d08770;">0</span><span>) + (presum (i - </span><span style="color:#d08770;">1</span><span>) </span><span style="color:#d08770;">0</span><span>)
+</span><span>presum </span><span style="color:#d08770;">0</span><span> j func = (func </span><span style="color:#d08770;">0</span><span> j) + (presum </span><span style="color:#d08770;">0</span><span> (j - </span><span style="color:#d08770;">1</span><span>))
+</span><span>presum i j func = (func i j) + (presum (i - </span><span style="color:#d08770;">1</span><span>) j) + (presum i (j - </span><span style="color:#d08770;">1</span><span>)) - (presum (i - </span><span style="color:#d08770;">1</span><span>) (j - </span><span style="color:#d08770;">1</span><span>))
+</span></code></pre>
+<p>假设 g 为求取这个值的函数。我们对一般形式进行替换：</p>
+<pre data-lang="haskell" style="background-color:#2b303b;color:#c0c5ce;" class="language-haskell "><code class="language-haskell" data-lang="haskell"><span>g </span><span style="color:#d08770;">0 0 </span><span>= f </span><span style="color:#d08770;">0 0
+</span><span>g i </span><span style="color:#d08770;">0 </span><span>= (f i </span><span style="color:#d08770;">0</span><span>) + (g (i - </span><span style="color:#d08770;">1</span><span>) </span><span style="color:#d08770;">0</span><span>)
+</span><span>g </span><span style="color:#d08770;">0</span><span> j = (f </span><span style="color:#d08770;">0</span><span> j) + (g </span><span style="color:#d08770;">0</span><span> (j - </span><span style="color:#d08770;">1</span><span>))
+</span><span>g i j = (f i j) + (g (i - </span><span style="color:#d08770;">1</span><span>) j) + (g i (j - </span><span style="color:#d08770;">1</span><span>)) - (g (i - </span><span style="color:#d08770;">1</span><span>) (j - </span><span style="color:#d08770;">1</span><span>))
+</span></code></pre>
+<p>现在把 f 的值代入进去：</p>
+<pre data-lang="haskell" style="background-color:#2b303b;color:#c0c5ce;" class="language-haskell "><code class="language-haskell" data-lang="haskell"><span>g </span><span style="color:#d08770;">0 0 </span><span>= </span><span style="color:#d08770;">1
+</span><span>g i </span><span style="color:#d08770;">0 </span><span>= i + </span><span style="color:#d08770;">1 </span><span>+ (g (i - </span><span style="color:#d08770;">1</span><span>) </span><span style="color:#d08770;">0</span><span>)
+</span><span>g </span><span style="color:#d08770;">0</span><span> j = j + </span><span style="color:#d08770;">1 </span><span>+ (g </span><span style="color:#d08770;">0</span><span> (j - </span><span style="color:#d08770;">1</span><span>))
+</span><span>g i j = (i + </span><span style="color:#d08770;">1</span><span>) * (j + </span><span style="color:#d08770;">1</span><span>) + (g (i - </span><span style="color:#d08770;">1</span><span>) j) + (g i (j - </span><span style="color:#d08770;">1</span><span>)) - (g (i - </span><span style="color:#d08770;">1</span><span>) (j - </span><span style="color:#d08770;">1</span><span>))
+</span></code></pre>
+<p>边界的两种情况是很容易化简的：</p>
+<pre data-lang="haskell" style="background-color:#2b303b;color:#c0c5ce;" class="language-haskell "><code class="language-haskell" data-lang="haskell"><span style="color:#65737e;">-- 应用等差数列求和公式
+</span><span>g i </span><span style="color:#d08770;">0 </span><span>= (i + </span><span style="color:#d08770;">2</span><span>) * (i + </span><span style="color:#d08770;">1</span><span>) / </span><span style="color:#d08770;">2
+</span><span>g </span><span style="color:#d08770;">0</span><span> j = (j + </span><span style="color:#d08770;">2</span><span>) * (j + </span><span style="color:#d08770;">1</span><span>) / </span><span style="color:#d08770;">2
+</span></code></pre>
+<p>最后一种情况我们应用之前使用的技巧：</p>
+<pre data-lang="haskell" style="background-color:#2b303b;color:#c0c5ce;" class="language-haskell "><code class="language-haskell" data-lang="haskell"><span style="color:#65737e;">-- 注意到 i j 处的前缀和实际上是上一行的前缀和，加上这一行的和
+</span><span style="color:#65737e;">-- 本行的和就是 (g 0 j) * (i + 1)
+</span><span>g i j = ((j + </span><span style="color:#d08770;">2</span><span>) * (j + </span><span style="color:#d08770;">1</span><span>) / </span><span style="color:#d08770;">2</span><span>) * (i + </span><span style="color:#d08770;">1</span><span>) + (g (i - </span><span style="color:#d08770;">1</span><span>) j)
+</span><span style="color:#65737e;">-- 在 j 不变的情况下，每一行的和都是 (g 0 j) * i
+</span><span>= ((i + </span><span style="color:#d08770;">2</span><span>) * (i + </span><span style="color:#d08770;">1</span><span>) / </span><span style="color:#d08770;">2</span><span>) * ((j + </span><span style="color:#d08770;">2</span><span>) * (j + </span><span style="color:#d08770;">1</span><span>) / </span><span style="color:#d08770;">2</span><span>)
+</span><span>= (i + </span><span style="color:#d08770;">2</span><span>) * (i + </span><span style="color:#d08770;">1</span><span>) * (j + </span><span style="color:#d08770;">2</span><span>) * (j + </span><span style="color:#d08770;">1</span><span>) / </span><span style="color:#d08770;">4
+</span></code></pre>
+<p>所以，我们只需要知道两个数组的长度，就能计算出满足条件的个数：</p>
+<pre data-lang="haskell" style="background-color:#2b303b;color:#c0c5ce;" class="language-haskell "><code class="language-haskell" data-lang="haskell"><span>prefix_sum_of_prefix_sum_of_ones m n = (m + </span><span style="color:#d08770;">1</span><span>) * m * (n + </span><span style="color:#d08770;">1</span><span>) * n / </span><span style="color:#d08770;">4
+</span></code></pre>
+
+
+         </main>
+
+         <footer>
+            
+<p class="tagsData">
+
+</p>
+
+            <hr>
+            <div class=footContainer>
+               <div class="footLeft">
+                  <p>Licensed under <a target="_blank" rel="noopener noreferrer" href="https://fr.wikipedia.org/wiki/Licence_MIT">MIT</a><br>
+                     Built with <a target="_blank" rel="noopener noreferrer" href="https://www.getzola.org">Zola</a> using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> theme &amp; <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/veqev">veqev</a> colors.<br>
+                  </p>
+               </div>
+               <div class="footRight">
+                  <!-- Size 46x46 -->
+                  <img class="footGif noStyle" loading="lazy" src="https://i.ibb.co/XYDpfcs/foot.gif" alt="footGif">
+                  <a class="metaData" target="_blank" rel="noopener noreferrer" href="https://refrigerator.navihx.top/atom.xml" title="Subscribe via RSS for updates.">RSS</a>
+               </div>
+            </div>
+         </footer>
+      </div>
+   </body>
+</html>

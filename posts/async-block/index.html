@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+      <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+      <meta name="robots" content="index, follow">
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <title>Why is this async block `FnOnce`</title>
+      
+      
+      
+      <meta name="title" content="Why is this async block `FnOnce`">
+      
+      
+      
+      <meta property="og:type" content="website">
+      <meta property="og:url" content="https://refrigerator.navihx.top/posts/async-block/">
+      
+      <meta property="og:site_name" content="">
+      
+      
+      <meta property="og:title" content="Why is this async block `FnOnce`">
+      
+      
+      
+      <meta property="og:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://refrigerator.navihx.top/posts/async-block/">
+      
+      <meta property="twitter:title" content="Why is this async block `FnOnce`">
+      
+      
+      
+      <meta property="twitter:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      <link rel="canonical" href="https://refrigerator.navihx.top/posts/async-block/">
+      
+      <link rel="shortcut icon" type="image/x-icon" href="https://refrigerator.navihx.top/favicon.ico">
+      
+      
+      
+      
+      <link rel="alternate" type="application/atom+xml" title="RSS" href="https://refrigerator.navihx.top/atom.xml">
+      
+      
+      
+      <link rel="stylesheet" href="https://refrigerator.navihx.top/css/style.css"/>
+      
+   </head>
+   <body>
+      <div class="wrapper">
+         <header>
+            
+            <nav class="navBar">
+               
+               
+               
+               <a href="/" >&#x2F;home&#x2F;</a>
+               
+               
+               
+               
+               <a href="/posts" >&#x2F;posts&#x2F;</a>
+               
+               
+
+               <div class="themeSwitch">
+                  <button class="themeButton light" onclick="setTheme('light')" title="Light mode">◐</button>
+                  <button class="themeButton dark" onclick="setTheme('dark')" title="Dark mode">◑</button>
+               </div>
+            </nav>
+            
+
+            <script>
+               const setTheme = (theme) => {
+                   document.documentElement.className = theme;
+                   localStorage.setItem('theme', theme);
+               }
+               const getTheme = () => {
+                   const theme = localStorage.getItem('theme');
+                   theme && setTheme(theme);
+               }
+               getTheme()
+            </script>
+         </header>
+
+         <main>
+            
+
+
+
+
+<h1 id="intro">Intro</h1>
+<p>写这篇post的原因是, 在给机器人写 warp server 的代码时,
+遇到了下面这个编译错误:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>    warp::path!(&quot;</span><span style="color:#a3be8c;">select</span><span>&quot; / &quot;</span><span style="color:#a3be8c;">coordinate</span><span>&quot;)
+</span><span>        .</span><span style="color:#96b5b4;">and</span><span>(warp::post())
+</span><span>        .</span><span style="color:#96b5b4;">and</span><span>(warp::body::content_length_limit(</span><span style="color:#d08770;">1024</span><span>))
+</span><span>        .</span><span style="color:#96b5b4;">and</span><span>(warp::body::json())
+</span><span>        .</span><span style="color:#96b5b4;">then</span><span>(|SelectCoordinate{</span><span style="color:#bf616a;">x</span><span>, y}: SelectCoordinate| async </span><span style="color:#b48ead;">move </span><span>{
+</span><span>                </span><span style="color:#b48ead;">if let </span><span>Err(_) = update_sender.</span><span style="color:#96b5b4;">send</span><span>(UpdateMessage::Update(StateUpdate::AddNewRouteByCoordinate(</span><span style="color:#b48ead;">crate</span><span>::robot::Coordinate(x, y)))).await {
+</span><span>                    </span><span style="color:#96b5b4;">return_code</span><span>(</span><span style="color:#d08770;">1</span><span>)
+</span><span>                } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>                    </span><span style="color:#96b5b4;">return_code</span><span>(</span><span style="color:#d08770;">0</span><span>)
+</span><span>                }
+</span><span>        })
+</span><span>
+</span><span>
+</span><span>error[</span><span style="color:#d08770;">E0525</span><span>]: expected a closure that implements the `Fn` </span><span style="color:#b48ead;">trait</span><span>, but this closure only implements `FnOnce`
+</span><span>  --&gt; robot_admin/src/route.rs:</span><span style="color:#d08770;">92</span><span>:</span><span style="color:#d08770;">15
+</span><span>   |
+</span><span style="color:#d08770;">92 </span><span>|         .</span><span style="color:#96b5b4;">then</span><span>(|SelectCoordinate{</span><span style="color:#bf616a;">x</span><span>, y}: SelectCoordinate| async </span><span style="color:#b48ead;">move </span><span>{
+</span><span>   |          ---- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ this closure implements `FnOnce`, not `Fn`
+</span><span>   |          |
+</span><span>   |          the requirement to implement `Fn` derives from here
+</span><span style="color:#d08770;">93 </span><span>|                 </span><span style="color:#b48ead;">if let </span><span>Err(_) = update_sender.</span><span style="color:#96b5b4;">send</span><span>(UpdateMessage::Update(StateUpdate::AddNewRouteByCoordinate(</span><span style="color:#b48ead;">crate</span><span>:...
+</span><span>   |                                 ------------- closure is `FnOnce` because it moves the variable `update_sender` out of 
+</span><span>its environment
+</span><span>   |
+</span><span>   = note: required </span><span style="color:#b48ead;">for</span><span> `[closure@robot_admin/src/route.rs:</span><span style="color:#d08770;">92</span><span>:</span><span style="color:#d08770;">15</span><span>: </span><span style="color:#d08770;">92</span><span>:</span><span style="color:#d08770;">57</span><span>]` to implement `warp::generic::Func&lt;(SelectCoordinat
+</span><span>e,)&gt;`
+</span><span>
+</span><span>For more information about this error, try `rustc --explain </span><span style="color:#d08770;">E0525</span><span>`.
+</span></code></pre>
+<p>这段代码生成一个 <code>POST /select/coordinate</code> 的路由, 它接收一个json
+form并更新机器人的路径信息. 这个更新的工作交由一个 &quot;异步闭包&quot; 来完成.</p>
+<p>我并 &quot; 没有将 <code>update_sender</code> 消耗或者移动所有权 &quot;, 但是这个闭包却是
+<code>FnOnce</code> 而不是 <code>Fn</code> , 不符合要求, 编译失败.
+这种情况可以简化成下面的代码:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>std::future::Future;
+</span><span>
+</span><span>#[</span><span style="color:#bf616a;">derive</span><span>(Debug, Clone)]
+</span><span style="color:#b48ead;">struct </span><span>S { </span><span style="color:#b48ead;">pub </span><span style="color:#bf616a;">a</span><span>: </span><span style="color:#b48ead;">i32 </span><span>}
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">take_fn</span><span>&lt;T: Future&lt;Output = ()&gt;&gt;(</span><span style="color:#bf616a;">_f</span><span>: impl Fn() -&gt; T) -&gt; () {}
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">take_fnonce</span><span>&lt;T: Future&lt;Output = ()&gt;&gt;(</span><span style="color:#bf616a;">_f</span><span>: impl FnOnce() -&gt; T) -&gt; () {}
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span>() {
+</span><span>    </span><span style="color:#65737e;">// TODO Why is `f` a `FnOnce`, which means that `f` takes the ownership of s and consumes it.
+</span><span>    </span><span style="color:#b48ead;">let</span><span> s = S { a: </span><span style="color:#d08770;">1 </span><span>};
+</span><span>    </span><span style="color:#b48ead;">let </span><span style="color:#8fa1b3;">f </span><span>= || async </span><span style="color:#b48ead;">move </span><span>{
+</span><span>        println!(&quot;</span><span style="color:#a3be8c;">a is </span><span style="color:#d08770;">{:?}</span><span>&quot;, s);
+</span><span>    };
+</span><span>    </span><span style="color:#96b5b4;">take_fn</span><span>(f);     </span><span style="color:#65737e;">// ERROR!
+</span><span>    </span><span style="color:#96b5b4;">take_fnonce</span><span>(f); </span><span style="color:#65737e;">// OK!
+</span><span>
+</span><span>    println!(&quot;</span><span style="color:#a3be8c;">Hello world!</span><span>&quot;);
+</span><span>}
+</span></code></pre>
+<p><a href="https://play.rust-lang.org/?version=stable&amp;mode=debug&amp;edition=2021&amp;gist=3029d58d12f93f8a744481a5b6c1aa9e">这个Playground可以直接尝试</a></p>
+<h1 id="f-shi-yi-ge-yi-bu-bi-bao-ma"><code>f</code> 是一个异步闭包吗?</h1>
+<p><code>rust</code> 的异步闭包的语法是 <code>async [move] |_| { /* block */ }</code> .
+但是注意看 <code>f</code> 的声明, <code>async move</code> 写在了参数的后面,
+说明这不是一个异步闭包, 而只是一个普通的闭包, 它返回一个 <code>impl Future</code> .
+<code>take_fn*</code> 的签名也证明了这一点.</p>
+<p>异步闭包<a href="https://github.com/rust-lang/rust/issues/62290">现在是一个不稳定的特性</a>,
+一般都通过一个返回 <code>Future</code> / 异步 block 的普通闭包实现. <code>FnOnce</code>
+说明了我们写的这个 闭包确实消耗了所有权, 只能执行一次 (对比 <code>Fn</code> ,
+它并不消耗所有权, 所以可以执行任意多次).</p>
+<h1 id="wei-shi-yao-shi-fnonce">为什么是 <code>FnOnce</code> ?</h1>
+<p><code>f</code> 返回的异步 block 是 move 块, 说明这个块会获得捕获变量的所有权.
+包裹这个异步块的闭包捕获了 <code>s</code>, 随后又被异步块获取了 所有权.
+异步块作为返回值, 将 <code>s</code> 的所有权转移到了外部, 这个时候闭包已经不拥有
+<code>s</code> 的所有权了, 所以为 <code>FnOnce</code> .</p>
+<p>所有权的转移过程也可以像下面这样展示:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let </span><span style="color:#8fa1b3;">f </span><span>= || {                      </span><span style="color:#65737e;">// Closure 从环境中捕获了 s
+</span><span>    async </span><span style="color:#b48ead;">move </span><span>{                  </span><span style="color:#65737e;">// Async Block 使用 move 捕获, 直接获取所有权而不是借用
+</span><span>        println!(&quot;</span><span style="color:#a3be8c;">a is </span><span style="color:#d08770;">{:?}</span><span>&quot;, s); </span><span style="color:#65737e;">// Async Block 从 Closure 中捕获了 s
+</span><span>    }                             </span><span style="color:#65737e;">// Async Block 结束
+</span><span>};                                </span><span style="color:#65737e;">// s 的所有权和 Async Block 作为返回值一同转移到了外部
+</span></code></pre>
+<p>解决的办法就是在闭包中保留所有权, 比如说直接 <code>Clone(&amp;self)</code> 或者使用
+<code>Arc</code> 来进行管理.</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let</span><span> s = S { a: </span><span style="color:#d08770;">1 </span><span>};
+</span><span style="color:#b48ead;">let</span><span> f = </span><span style="color:#b48ead;">move </span><span>|| {
+</span><span>    </span><span style="color:#b48ead;">let</span><span> s = s.</span><span style="color:#96b5b4;">clone</span><span>();
+</span><span>    async </span><span style="color:#b48ead;">move </span><span>{
+</span><span>        println!(&quot;</span><span style="color:#a3be8c;">a is </span><span style="color:#d08770;">{:?}</span><span>&quot;, s);
+</span><span>    }
+</span><span>};
+</span><span style="color:#96b5b4;">take_fn</span><span>(f); </span><span style="color:#65737e;">// TADAA!
+</span></code></pre>
+
+
+         </main>
+
+         <footer>
+            
+<p class="tagsData">
+
+</p>
+
+            <hr>
+            <div class=footContainer>
+               <div class="footLeft">
+                  <p>Licensed under <a target="_blank" rel="noopener noreferrer" href="https://fr.wikipedia.org/wiki/Licence_MIT">MIT</a><br>
+                     Built with <a target="_blank" rel="noopener noreferrer" href="https://www.getzola.org">Zola</a> using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> theme &amp; <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/veqev">veqev</a> colors.<br>
+                  </p>
+               </div>
+               <div class="footRight">
+                  <!-- Size 46x46 -->
+                  <img class="footGif noStyle" loading="lazy" src="https://i.ibb.co/XYDpfcs/foot.gif" alt="footGif">
+                  <a class="metaData" target="_blank" rel="noopener noreferrer" href="https://refrigerator.navihx.top/atom.xml" title="Subscribe via RSS for updates.">RSS</a>
+               </div>
+            </div>
+         </footer>
+      </div>
+   </body>
+</html>

@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+      <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+      <meta name="robots" content="index, follow">
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <title>rCore CH2 Note</title>
+      
+      
+      
+      <meta name="title" content="rCore CH2 Note">
+      
+      
+      
+      <meta property="og:type" content="website">
+      <meta property="og:url" content="https://refrigerator.navihx.top/posts/rcore-ch2/">
+      
+      <meta property="og:site_name" content="">
+      
+      
+      <meta property="og:title" content="rCore CH2 Note">
+      
+      
+      
+      <meta property="og:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://refrigerator.navihx.top/posts/rcore-ch2/">
+      
+      <meta property="twitter:title" content="rCore CH2 Note">
+      
+      
+      
+      <meta property="twitter:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      <link rel="canonical" href="https://refrigerator.navihx.top/posts/rcore-ch2/">
+      
+      <link rel="shortcut icon" type="image/x-icon" href="https://refrigerator.navihx.top/favicon.ico">
+      
+      
+      
+      
+      <link rel="alternate" type="application/atom+xml" title="RSS" href="https://refrigerator.navihx.top/atom.xml">
+      
+      
+      
+      <link rel="stylesheet" href="https://refrigerator.navihx.top/css/style.css"/>
+      
+   </head>
+   <body>
+      <div class="wrapper">
+         <header>
+            
+            <nav class="navBar">
+               
+               
+               
+               <a href="/" >&#x2F;home&#x2F;</a>
+               
+               
+               
+               
+               <a href="/posts" >&#x2F;posts&#x2F;</a>
+               
+               
+
+               <div class="themeSwitch">
+                  <button class="themeButton light" onclick="setTheme('light')" title="Light mode">◐</button>
+                  <button class="themeButton dark" onclick="setTheme('dark')" title="Dark mode">◑</button>
+               </div>
+            </nav>
+            
+
+            <script>
+               const setTheme = (theme) => {
+                   document.documentElement.className = theme;
+                   localStorage.setItem('theme', theme);
+               }
+               const getTheme = () => {
+                   const theme = localStorage.getItem('theme');
+                   theme && setTheme(theme);
+               }
+               getTheme()
+            </script>
+         </header>
+
+         <main>
+            
+
+
+
+
+<h1 id="rcore-ch2-bi-ji">rCore Ch2 笔记</h1>
+<p>最近开始刷 <a href="https://rcore-os.cn/rCore-Tutorial-Book-v3/index.html">rCore 第三版教程</a> ，尝试用 Rust 在 RISC-V 模拟器上实现一个操作系统内核。在这里留下一些实现过程中踩的坑以及相关的笔记。笔记从教程的第二章开始编号。之所以不从第一章开始，是因为第一章的内容不是很多，所以就和第二章一起写了，如果之前有写过操作系统相关或者 bare metal 的代码，很快就能上手。</p>
+<p>对应的代码在<a href="https://github.com/NaviHX/rcore/tree/ch2">这里</a></p>
+<h2 id="qi-dong-liu-cheng">启动流程</h2>
+<p>RISCV-V 芯片启动，进行一些简单的初始化后，就将运行放置到内存地址 0x1000 处的 SBI 代码（在我们平常使用的电脑上，负责同样功能的程序被叫做 BIOS ）对芯片进行初始化操作。在使用 qemu 运行的 rCore 内核实验中，我们使用了 <a href="https://github.com/rustsbi/rustsbi-qemu">rustsib-qemu</a> 作为内核的引导程序。在完成初始化工作后， CPU 将会转到 Supervisor 特权级，并且跳转到 0x80200000 继续执行。关于特权级的描述稍后进行。</p>
+<p>为了让我们的内核可以在 SBI 完成工作后可以运行，我们需要使用链接器脚本将内核的入口地址放到地址 0x80200000 处。</p>
+<ol>
+<li>将入口函数的段标记为 .text.entry 。</li>
+<li>在 linker.ld 中将 .text.entry 放到 0x80200000</li>
+</ol>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>SECTIONS {
+</span><span>    ...
+</span><span>    . = 0x80200000
+</span><span>    .text : {
+</span><span>        *(.text.entry)
+</span><span>        *(.text .text.*)
+</span><span>    }
+</span><span>    ...
+</span><span>}
+</span></code></pre>
+<h3 id="sbi-ti-gong-de-fu-wu">SBI 提供的服务</h3>
+<p>就像操作系统可以给应用程序提供系统调用的接口一样，SBI 也为 Supervisor 特权级运行的内核代码提供了接口使用硬件的服务。按照 SBI 的标准，我们可以向下面这样调用 SBI 提供的接口。</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">ecall</span><span>(</span><span style="color:#bf616a;">extension</span><span>: </span><span style="color:#b48ead;">usize</span><span>, </span><span style="color:#bf616a;">fid</span><span>: </span><span style="color:#b48ead;">usize</span><span>, </span><span style="color:#bf616a;">args</span><span>: [3; </span><span style="color:#b48ead;">usize</span><span>]) -&gt; </span><span style="color:#b48ead;">usize </span><span>{
+</span><span>    </span><span style="color:#b48ead;">let mut</span><span> ret;
+</span><span>    </span><span style="color:#b48ead;">unsafe </span><span>{
+</span><span>        asm!(
+</span><span>            &quot;</span><span style="color:#a3be8c;">ecall</span><span>&quot;,
+</span><span>            </span><span style="color:#96b5b4;">inlateout</span><span>(&quot;</span><span style="color:#a3be8c;">x10</span><span>&quot;) arg[</span><span style="color:#d08770;">0</span><span>] =&gt; ret,
+</span><span>            in(&quot;</span><span style="color:#a3be8c;">x11</span><span>&quot;) arg[</span><span style="color:#d08770;">1</span><span>],
+</span><span>            in(&quot;</span><span style="color:#a3be8c;">x12</span><span>&quot;) arg[</span><span style="color:#d08770;">2</span><span>],
+</span><span>            in(&quot;</span><span style="color:#a3be8c;">x16</span><span>&quot;) fid,
+</span><span>            in(&quot;</span><span style="color:#a3be8c;">x17</span><span>&quot;) extension,
+</span><span>        );
+</span><span>    }
+</span><span>    ret
+</span><span>}
+</span></code></pre>
+<p>上面的例子可以调用一个最多三个参数的 SBI 接口。 ecall 指令可以让我们将 CPU 的特权级提升（或者不变），我们实现的操作系统内核也可以提供类似的 ABI 接口供应用程序调用，也就是系统调用。与 ecall 指令相对的，还有一个 eret 指令，可以将 CPU 退回到之前的特权级，关于中断与异常的部分会在「处理中断与异常」的部分作更多的介绍。</p>
+<h2 id="riscv-v-call-convention">RISCV-V Call Convention</h2>
+<p>当我们编写内核代码时，难免会进行函数调用。函数调用的过程中，可能会使用一些寄存器，其中的数值可能会被覆盖，为了让调用函数的过程可以成功继续执行，我们需要恢复调用者的寄存器状态。哪些寄存器需要保存，哪些不需要，每个寄存器什么用处，这就是 Call Conventions 「调用约定」（如果你曾经写过汇编，或者做过 FFI 相关的项目，你应该知道我在说什么）。</p>
+<p>下面是 RISC-V 的调用约定。</p>
+<table><thead><tr><th>Name</th><th>Register Number</th><th>Usage</th><th>Saver</th></tr></thead><tbody>
+<tr><td>zero</td><td>0</td><td>Hard-wired zero</td><td>N/A</td></tr>
+<tr><td>ra</td><td>1</td><td>Return address</td><td>Caller</td></tr>
+<tr><td>sp</td><td>2</td><td>Stack pointer</td><td>Callee</td></tr>
+<tr><td>gp</td><td>3</td><td>Global pointer</td><td>N/A</td></tr>
+<tr><td>tp</td><td>4</td><td>Thread pointer</td><td>N/A</td></tr>
+<tr><td>t0-2</td><td>5-7</td><td>Temporaries</td><td>Caller</td></tr>
+<tr><td>s0/fp</td><td>8</td><td>Frame pointer</td><td>Callee</td></tr>
+<tr><td>s1</td><td>9</td><td>Saved register</td><td>Callee</td></tr>
+<tr><td>a0-1</td><td>10-11</td><td>Function arguments / Return values</td><td>Caller</td></tr>
+<tr><td>a2-7</td><td>12-17</td><td>Function arguments</td><td>Caller</td></tr>
+<tr><td>s2-11</td><td>18-27</td><td>Saved registers</td><td>Callee</td></tr>
+<tr><td>t3-6</td><td>28-31</td><td>Temporaries</td><td>Caller</td></tr>
+</tbody></table>
+<p>在我们进行函数调用的地方，编译器都会为我们生成类似的代码：</p>
+<pre data-lang="asm" style="background-color:#2b303b;color:#c0c5ce;" class="language-asm "><code class="language-asm" data-lang="asm"><span style="color:#8fa1b3;">__function:
+</span><span style="color:#8fa1b3;">    addi </span><span style="color:#bf616a;">sp</span><span>, </span><span style="color:#bf616a;">sp</span><span>, -</span><span style="color:#d08770;">64 </span><span style="color:#8fa1b3;"># 分配栈
+</span><span style="color:#8fa1b3;">    sd ra</span><span>, </span><span style="color:#d08770;">56</span><span style="color:#8fa1b3;">(</span><span style="color:#bf616a;">sp</span><span style="color:#8fa1b3;">) # 保存返回地址
+</span><span style="color:#8fa1b3;">    sd s0</span><span>, </span><span style="color:#d08770;">48</span><span style="color:#8fa1b3;">(</span><span style="color:#bf616a;">sp</span><span style="color:#8fa1b3;">) # 保存 frame pointer
+</span><span style="color:#8fa1b3;">    addi s0</span><span>, </span><span style="color:#bf616a;">sp</span><span>, </span><span style="color:#d08770;">64 </span><span style="color:#8fa1b3;"># 新的 frame pointer
+</span><span>
+</span><span style="color:#8fa1b3;">    # Some code
+</span><span>
+</span><span style="color:#8fa1b3;">    ld ra</span><span>, </span><span style="color:#d08770;">56</span><span style="color:#8fa1b3;">(</span><span style="color:#bf616a;">sp</span><span style="color:#8fa1b3;">) # 恢复返回地址
+</span><span style="color:#8fa1b3;">    ld s0</span><span>, </span><span style="color:#d08770;">48</span><span style="color:#8fa1b3;">(</span><span style="color:#bf616a;">sp</span><span style="color:#8fa1b3;">) # 恢复 frame pointer
+</span><span style="color:#8fa1b3;">    addi </span><span style="color:#bf616a;">sp</span><span>, </span><span style="color:#bf616a;">sp</span><span>, </span><span style="color:#d08770;">64 </span><span style="color:#8fa1b3;"># 恢复栈
+</span><span style="color:#8fa1b3;">    </span><span style="color:#b48ead;">ret
+</span></code></pre>
+<p>为了让我们的内核支持函数调用，我们需要做到以下几点。</p>
+<ol>
+<li>为函数调用提供一个栈，将 sp 指向栈的顶部（因为栈是向下增长的）。</li>
+<li>为每一次函数调用的周围做好执行环境的保存与恢复工作。这一项工作通常有编译器帮助我们执行。</li>
+</ol>
+<h2 id="te-quan-ji">特权级</h2>
+<p>为了让应用程序出现故障时，不会让整个计算机停止运行，同时为了限制应用程序进行某些需要特权的操作， RISC-V 提供了多个特权级： Machine 、Hypervisor 、Supervisor 、User 。当应用程序发生错误时，会陷入到内核中进行处理，终止应用程序的执行，恢复整个系统的运行。也可以使用 ecall 调用系统提供的服务。</p>
+<ul>
+<li>ecall : 可以使得 CPU 提升到不低于当前特权级的状态。</li>
+<li>eret : 可以使得 CPU 恢复到不高于当前特权级的状态。</li>
+</ul>
+<p>这两条命令进行组合，就可以实现系统调用的功能，向应用程序提供服务。</p>
+<h2 id="chu-li-zhong-duan-he-yi-chang">处理中断和异常</h2>
+<p>在我们实现的内核中，我们要做的事情非常简单：当应用程序 trap 到内核中后，调用相应的代码处理异常 / 中断，最后返回用户态执行。在处理中断的过程中，需要注意这些寄存器：</p>
+<table><thead><tr><th>CSR</th><th>Description</th></tr></thead><tbody>
+<tr><td>sstatus</td><td>发生 trap 前 CPU 处于的特权级</td></tr>
+<tr><td>sepc</td><td>发生 trap 前执行的最后一条指令的地址</td></tr>
+<tr><td>scause</td><td>描述 trap 的原因</td></tr>
+<tr><td>stval</td><td>trap 的附加信息</td></tr>
+<tr><td>stvec</td><td>处理 trap 的代码地址</td></tr>
+</tbody></table>
+<p>为了能够处理中断，我们需要完成下面的工作：</p>
+<ol>
+<li>编写处理 trap 的代码，把地址写入 stvec 寄存器中。这里 stvec 被设置为了 Direct 模式，直接写入地址就行了。</li>
+<li>编写恢复用户态的代码。</li>
+<li>在进入 trap 后，需要将 sp 设置到内核栈。返回时重新指向用户栈。（用 sscratch 保存）</li>
+</ol>
+<p>为了正确恢复用户态的执行，我们需要保存所有通用寄存器的数值到内核栈中——这里不存在由调用者保存与由被调用者保存，所有的寄存器在内核处理其间都有可能被使用。同时需要保存 sepc 的寄存器的值，这里考虑到了嵌套 trap 与切换任务的可能（在 Ch3 中有涉及）。</p>
+<p>在 rCore 的代码中我们可以发现这样一个结构。</p>
+<pre data-lang="asm" style="background-color:#2b303b;color:#c0c5ce;" class="language-asm "><code class="language-asm" data-lang="asm"><span style="color:#8fa1b3;">__alltraps:
+</span><span style="color:#8fa1b3;">    # 保存状态到栈上
+</span><span style="color:#8fa1b3;">    # 调用处理 trap 各种情况的函数
+</span><span>
+</span><span style="color:#8fa1b3;">__restore:
+</span><span style="color:#8fa1b3;">    # 恢复状态
+</span><span style="color:#8fa1b3;">    # 返回用户态
+</span><span style="color:#8fa1b3;">    sret
+</span></code></pre>
+<p>这里看似有两个函数 __alltraps 和 __restore ，但在调用 alltraps 的过程中只有一个函数，因为在 restore 前并没有 ret 。restore 可以用于运行第一个任务：构造一个保存用户态状态的地址，将 sp 指向这个地址，调用 restore 就可以运行构造的程序。</p>
+<h2 id="yun-xing-ying-yong-cheng-xu">运行应用程序</h2>
+<p>通过构造「用户态寄存器状态」调用 restore 即可执行。</p>
+
+
+         </main>
+
+         <footer>
+            
+<p class="tagsData">
+
+</p>
+
+            <hr>
+            <div class=footContainer>
+               <div class="footLeft">
+                  <p>Licensed under <a target="_blank" rel="noopener noreferrer" href="https://fr.wikipedia.org/wiki/Licence_MIT">MIT</a><br>
+                     Built with <a target="_blank" rel="noopener noreferrer" href="https://www.getzola.org">Zola</a> using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> theme &amp; <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/veqev">veqev</a> colors.<br>
+                  </p>
+               </div>
+               <div class="footRight">
+                  <!-- Size 46x46 -->
+                  <img class="footGif noStyle" loading="lazy" src="https://i.ibb.co/XYDpfcs/foot.gif" alt="footGif">
+                  <a class="metaData" target="_blank" rel="noopener noreferrer" href="https://refrigerator.navihx.top/atom.xml" title="Subscribe via RSS for updates.">RSS</a>
+               </div>
+            </div>
+         </footer>
+      </div>
+   </body>
+</html>

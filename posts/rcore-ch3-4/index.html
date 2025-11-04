@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+      <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+      <meta name="robots" content="index, follow">
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <title>rCore CH3 CH4 Note</title>
+      
+      
+      
+      <meta name="title" content="rCore CH3 CH4 Note">
+      
+      
+      
+      <meta property="og:type" content="website">
+      <meta property="og:url" content="https://refrigerator.navihx.top/posts/rcore-ch3-4/">
+      
+      <meta property="og:site_name" content="">
+      
+      
+      <meta property="og:title" content="rCore CH3 CH4 Note">
+      
+      
+      
+      <meta property="og:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://refrigerator.navihx.top/posts/rcore-ch3-4/">
+      
+      <meta property="twitter:title" content="rCore CH3 CH4 Note">
+      
+      
+      
+      <meta property="twitter:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      <link rel="canonical" href="https://refrigerator.navihx.top/posts/rcore-ch3-4/">
+      
+      <link rel="shortcut icon" type="image/x-icon" href="https://refrigerator.navihx.top/favicon.ico">
+      
+      
+      
+      
+      <link rel="alternate" type="application/atom+xml" title="RSS" href="https://refrigerator.navihx.top/atom.xml">
+      
+      
+      
+      <link rel="stylesheet" href="https://refrigerator.navihx.top/css/style.css"/>
+      
+   </head>
+   <body>
+      <div class="wrapper">
+         <header>
+            
+            <nav class="navBar">
+               
+               
+               
+               <a href="/" >&#x2F;home&#x2F;</a>
+               
+               
+               
+               
+               <a href="/posts" >&#x2F;posts&#x2F;</a>
+               
+               
+
+               <div class="themeSwitch">
+                  <button class="themeButton light" onclick="setTheme('light')" title="Light mode">◐</button>
+                  <button class="themeButton dark" onclick="setTheme('dark')" title="Dark mode">◑</button>
+               </div>
+            </nav>
+            
+
+            <script>
+               const setTheme = (theme) => {
+                   document.documentElement.className = theme;
+                   localStorage.setItem('theme', theme);
+               }
+               const getTheme = () => {
+                   const theme = localStorage.getItem('theme');
+                   theme && setTheme(theme);
+               }
+               getTheme()
+            </script>
+         </header>
+
+         <main>
+            
+
+
+
+
+<h1 id="rcore-ch3-ch4-bi-ji">rCore CH3 CH4 笔记</h1>
+<p>第三章与第四章主要讲了进程控制流切换以及进程间的隔离。在没有引入虚拟地址之前，两个进程通过使用位于不同地址的内存来区分不同的进程，这就需要我们在编写程序时，提前写好程序使用的内存地址，同时使用了相同的地址的程序无法同时进行。为了解决这个问题，我们引入了虚拟地址——通过地址转换空间，将应用的虚拟地址转换为实际的物理地址。通过这种方法，可以在编写程序时不再关注具体的内存地址分配，而是使用相同的地址，通过不同的映射来获取应用的内存。因此，这篇笔记主要聚焦于如何使用虚拟地址来进行进程隔离，同时虚拟地址给控制流切换带来的问题与解决方法。</p>
+<h2 id="ye-biao">页表</h2>
+<p>MMU 通过查找页表来将虚拟地址转换为物理地址。RISC-V 使用的页表项格式如下（左侧为高位）：</p>
+<table><thead><tr><th>Reserved 10bits</th><th>PPN[2] 26bits</th><th>PPN[1] 9bits</th><th>PPN[0] 9bits</th><th>RSW 2bits</th><th>D</th><th>A</th><th>G</th><th>U</th><th>X</th><th>W</th><th>R</th><th>V</th></tr></thead><tbody>
+</tbody></table>
+<p>每一个页表项使用了 8 个字节。虚拟地址和物理地址分别使用了 39bits 和 56bits ，其中低 12 位是页内偏移，所以虚拟地址空间中有 2 ^ 27 个内存页面。如果我们直接使用普通的线性表作为页表，为了能够在页表获取每一个虚拟内存页面对应的物理页面，这个页表需要 2 ^ 27 * 8 bytes = 2 ^ 30 bytes = 1 GB 的内存作为页表，这显然是不经济的——你能够接受每一个应用程序都至少占用 1GB 内存吗？为了解决这个问题，可以使用多级页表。</p>
+<h3 id="duo-ji-ye-biao">多级页表</h3>
+<p>使用多级页表可以省下多少内存？以 RV39 为例，页内偏移一共 12 位，一个内存页面的大小为 2 ^ 12 bytes = 4 KB ，每一个页面可以放下 512 个页表项（正好对应虚拟页号的 9 位），共 3 级页表，总共只需要 (1 root page table + 2 ^ 9 second level page tables + 2 ^ 18 third level page tables) * 512 bytes = 128 MB 。如此，我们只需要将根页表的地址写入 satp 寄存器，MMU 就可以自动寻找对应的物理地址。</p>
+<p>多级页表的设计类似于数据结构中的字典树，使用 3 个 9 位的页号分段进行索引。</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>aaaaaaaaa bbbbbbbbb ccccccccc
+</span></code></pre>
+<p>使用 <code>aaaaaaaaa</code> 在根页表中查到对应的物理地址 A ，在 A 处的二级页表中查询 <code>bbbbbbbbb</code> ，以此类推，直到查询到叶子节点。</p>
+<h3 id="ru-he-shou-dong-fang-wen-cao-zuo-ye-biao">如何手动访问 / 操作页表</h3>
+<p>我们可能需要对页表的项进行修改，如何进行？</p>
+<p>当我们开启页表后，直接通过页表的物理地址去查询和修改似乎已经不可能了——我们输入的物理地址会经由 MMU 进行一次地址变换，无法保证还是需要访问的地址。这里提供两种方法。</p>
+<h4 id="xian-xing-ying-she">线性映射</h4>
+<p>将页表的页面地址进行线性映射。具体来说，我们将页号为 VP 的虚拟页面映射到页号为 VP + d 的物理页面上。如果 d 为 0 ，这也被称作直接映射。</p>
+<p>在 rCore 的实现中就采用了这种方式。rCore 将页表存在的内存区域，也就是内核程序的堆进行了直接映射，我们可以直接使用物理地址作为虚拟地址进行查询，非常方便。</p>
+<h4 id="di-gui-ying-she">递归映射</h4>
+<p>另一种方法是，将页表的某一个页表项指向它自己。例如，将第 511 个页表项指向自身，那么在三级页表的情况下，我们可以使用页号 0b111_111_111_111_111_111 = 0x7ffffff 来访问根页表。而访问根页表的第 0 个二级页表，可以使用页号 0b000_000_000_111_111_111_111_111_111 = 0x3ffff 或 0b111_111_111_111_111_111_000_000_000 = 0x7fffe00 。</p>
+<h2 id="kong-zhi-liu-qie-huan">控制流切换</h2>
+<p>当应用交出 CPU 时，会陷入到内核中进行任务切换。通过切换内核的控制流，将内核态的寄存器的值更换为另一个控制流的值，最终可以切换到另一个应用的执行。当需要切换内核控制流时，需要调用 <code>switch</code> 函数，将寄存器的进行更换。</p>
+<pre data-lang="asm" style="background-color:#2b303b;color:#c0c5ce;" class="language-asm "><code class="language-asm" data-lang="asm"><span style="color:#8fa1b3;"># a0: pre task context pointer</span><span>, </span><span style="color:#8fa1b3;">a1: cur task context pointer
+</span><span style="color:#8fa1b3;">__switch:
+</span><span style="color:#8fa1b3;">    # Save </span><span style="color:#bf616a;">sp
+</span><span style="color:#8fa1b3;">    sd </span><span style="color:#bf616a;">sp</span><span>, </span><span style="color:#d08770;">8</span><span style="color:#8fa1b3;">(a0)
+</span><span>
+</span><span style="color:#8fa1b3;">    # Save ra
+</span><span style="color:#8fa1b3;">    sd ra</span><span>, </span><span style="color:#d08770;">0</span><span style="color:#8fa1b3;">(a0)
+</span><span>
+</span><span style="color:#8fa1b3;">    # Save sn
+</span><span style="color:#8fa1b3;">    .set n</span><span>, </span><span style="color:#d08770;">0
+</span><span style="color:#8fa1b3;">    .rept </span><span style="color:#d08770;">12
+</span><span style="color:#8fa1b3;">        SAVE_SN %n
+</span><span style="color:#8fa1b3;">        .set n</span><span>, </span><span style="color:#8fa1b3;">n</span><span>+</span><span style="color:#d08770;">1
+</span><span style="color:#8fa1b3;">    .endr
+</span><span>
+</span><span style="color:#8fa1b3;">    # Load </span><span style="color:#bf616a;">sp</span><span>, </span><span style="color:#8fa1b3;">ra</span><span>, </span><span style="color:#8fa1b3;">sn from the next task context
+</span><span style="color:#8fa1b3;">    ld </span><span style="color:#bf616a;">sp</span><span>, </span><span style="color:#d08770;">8</span><span style="color:#8fa1b3;">(a1)
+</span><span style="color:#8fa1b3;">    ld ra</span><span>, </span><span style="color:#d08770;">0</span><span style="color:#8fa1b3;">(a1)
+</span><span style="color:#8fa1b3;">    .set n</span><span>, </span><span style="color:#d08770;">0
+</span><span style="color:#8fa1b3;">    .rept </span><span style="color:#d08770;">12
+</span><span style="color:#8fa1b3;">        LOAD_SN %n
+</span><span style="color:#8fa1b3;">        .set n</span><span>, </span><span style="color:#8fa1b3;">n</span><span>+</span><span style="color:#d08770;">1
+</span><span style="color:#8fa1b3;">    .endr
+</span><span>
+</span><span style="color:#8fa1b3;">    # Because </span><span style="color:#bf616a;">sp </span><span style="color:#8fa1b3;">has been changed to the new context</span><span>,
+</span><span style="color:#8fa1b3;">    # this </span><span style="color:#b48ead;">ret </span><span style="color:#8fa1b3;">will go back to the next task&#39;s control flow
+</span><span style="color:#8fa1b3;">    </span><span style="color:#b48ead;">ret
+</span></code></pre>
+<p>切换控制流的关键在于重新加载了 sp ，ra 寄存器的值。<code>ra</code> 寄存器管理了返回地址，执行 <code>ret</code> 指令后会跳转到新任务的执行 <code>__switch</code> 后的内核控制流。<code>sp</code> 寄存器管理栈顶的位置，可以用于保存和恢复应用的用户态寄存器，实现从内核态返回到新任务的用户态。</p>
+<h2 id="di-zhi-kong-jian-ping-hua-qie-huan">地址空间平滑切换</h2>
+<h3 id="di-zhi-kong-jian-qie-huan-dai-lai-de-wen-ti">地址空间切换带来的问题</h3>
+<p>由于从内核态中的控制流切换，以及用户态陷入内核态，内核态返回用户态需要切换页表，切换页表可能导致 <code>pc</code> 失效——指向没有有效指令的区域。</p>
+<h3 id="ru-he-ping-hua-qie-huan">如何平滑切换</h3>
+<p>将需要进行页表切换的部分代码在所有地址空间中都映射到同一块区域。</p>
+
+
+         </main>
+
+         <footer>
+            
+<p class="tagsData">
+
+</p>
+
+            <hr>
+            <div class=footContainer>
+               <div class="footLeft">
+                  <p>Licensed under <a target="_blank" rel="noopener noreferrer" href="https://fr.wikipedia.org/wiki/Licence_MIT">MIT</a><br>
+                     Built with <a target="_blank" rel="noopener noreferrer" href="https://www.getzola.org">Zola</a> using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> theme &amp; <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/veqev">veqev</a> colors.<br>
+                  </p>
+               </div>
+               <div class="footRight">
+                  <!-- Size 46x46 -->
+                  <img class="footGif noStyle" loading="lazy" src="https://i.ibb.co/XYDpfcs/foot.gif" alt="footGif">
+                  <a class="metaData" target="_blank" rel="noopener noreferrer" href="https://refrigerator.navihx.top/atom.xml" title="Subscribe via RSS for updates.">RSS</a>
+               </div>
+            </div>
+         </footer>
+      </div>
+   </body>
+</html>

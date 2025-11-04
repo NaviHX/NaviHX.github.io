@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+      <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+      <meta name="robots" content="index, follow">
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <title>Binary Search</title>
+      
+      
+      
+      <meta name="title" content="Binary Search">
+      
+      
+      
+      <meta property="og:type" content="website">
+      <meta property="og:url" content="https://refrigerator.navihx.top/posts/binary-search/">
+      
+      <meta property="og:site_name" content="">
+      
+      
+      <meta property="og:title" content="Binary Search">
+      
+      
+      
+      <meta property="og:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://refrigerator.navihx.top/posts/binary-search/">
+      
+      <meta property="twitter:title" content="Binary Search">
+      
+      
+      
+      <meta property="twitter:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      <link rel="canonical" href="https://refrigerator.navihx.top/posts/binary-search/">
+      
+      <link rel="shortcut icon" type="image/x-icon" href="https://refrigerator.navihx.top/favicon.ico">
+      
+      
+      
+      
+      <link rel="alternate" type="application/atom+xml" title="RSS" href="https://refrigerator.navihx.top/atom.xml">
+      
+      
+      
+      <link rel="stylesheet" href="https://refrigerator.navihx.top/css/style.css"/>
+      
+   </head>
+   <body>
+      <div class="wrapper">
+         <header>
+            
+            <nav class="navBar">
+               
+               
+               
+               <a href="/" >&#x2F;home&#x2F;</a>
+               
+               
+               
+               
+               <a href="/posts" >&#x2F;posts&#x2F;</a>
+               
+               
+
+               <div class="themeSwitch">
+                  <button class="themeButton light" onclick="setTheme('light')" title="Light mode">◐</button>
+                  <button class="themeButton dark" onclick="setTheme('dark')" title="Dark mode">◑</button>
+               </div>
+            </nav>
+            
+
+            <script>
+               const setTheme = (theme) => {
+                   document.documentElement.className = theme;
+                   localStorage.setItem('theme', theme);
+               }
+               const getTheme = () => {
+                   const theme = localStorage.getItem('theme');
+                   theme && setTheme(theme);
+               }
+               getTheme()
+            </script>
+         </header>
+
+         <main>
+            
+
+
+
+
+<h1 id="binary-search">Binary Search</h1>
+<p>最常见的算法之一。因为每次写出来的都不一样 XD ，所以在这里留一个笔记。</p>
+<h2 id="suan-fa-shu-chu-yu-xun-huan-bu-bian-liang">算法输出与循环不变量</h2>
+<p>这里介绍的二分搜索算法可以寻找目标元素的最小索引（假设数组已经从小到大排序），当无法找到时，则返回目标元素可以插入的位置（也就是比多少个元素大）。</p>
+<p>已知已排序的数组 elem ，定义两个变量 left &amp; right ，满足</p>
+<ul>
+<li>0 &lt;= left &lt; right &lt;= elem.len()</li>
+<li>target 大于 elem[..left] 中的所有元素</li>
+<li>target 小于等于 elem[right..] 中的所有元素</li>
+</ul>
+<p>每次循环都要缩小 left - right 的范围来找到目标元素。因为需要对数组进行排序和比较大小，所以数组元素 / 数组元素对应的 key 必须是全序的。</p>
+<p>缩小范围的步骤为</p>
+<ul>
+<li>比较中间元素的与目标元素的大小</li>
+<li>如果目标元素 &gt;= 中间元素， right := mid</li>
+<li>如果目标元素 &lt; 中间元素， left := mid + 1</li>
+</ul>
+<p>缩小范围的过程一直保持后两个不变量，所以跳出循环的条件应该是第一个不变量不成立。此时满足 target &gt; elem[..left] and target &lt;= elem[right..] （注意这里 ..left 不包括 left ），由于不满足第一个不变量，此时 left &gt;= right 。由于缩小范围的过程中，每次缩小时都满足 right' = mid or left' = mid + 1 ，而 left &lt;= mid &lt; right ，所以最后一次缩小后，left == right 。考虑到后两个不变量成立，此时 left 就是目标元素的最小索引。</p>
+<h2 id="code">Code</h2>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">binary_search</span><span>&lt;T&gt;(</span><span style="color:#bf616a;">elem</span><span>: &amp;[T], </span><span style="color:#bf616a;">target</span><span>: T) -&gt; Result&lt;</span><span style="color:#b48ead;">usize</span><span>, </span><span style="color:#b48ead;">usize</span><span>&gt;
+</span><span style="color:#b48ead;">where
+</span><span>    T: Ord
+</span><span>{
+</span><span>    </span><span style="color:#b48ead;">use </span><span>std::cmp::Ordering;
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">let</span><span> len = elem.</span><span style="color:#96b5b4;">len</span><span>();
+</span><span>    </span><span style="color:#b48ead;">let mut</span><span> left = </span><span style="color:#d08770;">0</span><span>;
+</span><span>    </span><span style="color:#b48ead;">let mut</span><span> right = len;
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">while</span><span> left &lt; right {
+</span><span>        </span><span style="color:#b48ead;">let</span><span> mid = left + ((right - left) &gt;&gt; </span><span style="color:#d08770;">1</span><span>);
+</span><span>        </span><span style="color:#b48ead;">match</span><span> target.</span><span style="color:#96b5b4;">cmp</span><span>(&amp;elem[mid]) {
+</span><span>            Ordering::Less | Ordering::Equal =&gt; {
+</span><span>                right = mid;
+</span><span>            }
+</span><span>            Ordering::Greater =&gt; {
+</span><span>                left = mid + </span><span style="color:#d08770;">1</span><span>;
+</span><span>            }
+</span><span>        }
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">if</span><span> elem[left] == mid { Ok(left) } </span><span style="color:#b48ead;">else </span><span>{ Err(left) }
+</span><span>}
+</span></code></pre>
+<h2 id="li-ti-xun-zhao-liang-ge-zheng-xu-shu-zu-de-zhong-wei-shu">例题：寻找两个正序数组的中位数</h2>
+<p><a href="https://leetcode.cn/problems/median-of-two-sorted-arrays/">题目描述</a></p>
+<p>本题的关键是确定如何进行二分搜索。我们假设最终的中位数大于等于 nums1 ， nums2 的前 id1 ， id2 个元素。</p>
+<ul>
+<li>
+<p>第一点，因为我们有两个正序数组，在没有将它们合并的情况下，如何进行二分搜索？这里的关键是，我们确定了在其中一个数组的索引，我们能不能确定在另一个数组的索引。首先我们假设两个数组 nums1 和 nums2 ，其中，nums1.len() &lt;= nums2.len() ，如果我们确定了在 nums1 中的索引，有没有办法确定 nums2 的索引。注意到中位数的性质，它一定比一半的数组元素要大，这意味着 id1 + id2 = (len1 + len2) / 2 ，那么另一个数组的索引可以通过 id2 = (len1 + len2) / 2 - id1 来计算。</p>
+</li>
+<li>
+<p>第二点，二分搜索的键值是什么？这也需要利用中位数的性质。中位数比前一半的数大，比后一半的数小，转换到两个数组的情况下可以这样表示：nums1[id1], nums2[id2] &gt;= nums1[..id1] U nums2[..id2] ，且对于 id &lt; id1 ， nums1[id] &lt; nums2[id2] ，对 nums2 同理。这个性质中体现了单调性：只有 id &gt;= id1 ，才有 nums1[id] &gt;= nums2[id2 - 1] ，而 id2 与 id1 有关。接下来的问题就是利用二分搜索查找 id1 了。</p>
+</li>
+</ul>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">find_median_sorted_arrays</span><span>(</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">nums1</span><span>: Vec&lt;</span><span style="color:#b48ead;">i32</span><span>&gt;, </span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">nums2</span><span>: Vec&lt;</span><span style="color:#b48ead;">i32</span><span>&gt;) -&gt; </span><span style="color:#b48ead;">f64 </span><span>{
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">binary_search_by_key</span><span>(</span><span style="color:#bf616a;">elems</span><span>: &amp;[</span><span style="color:#b48ead;">usize</span><span>], </span><span style="color:#bf616a;">target</span><span>: </span><span style="color:#b48ead;">bool</span><span>, </span><span style="color:#bf616a;">key_fn</span><span>: impl Fn(</span><span style="color:#bf616a;">usize</span><span>) -&gt; </span><span style="color:#b48ead;">bool</span><span>) -&gt; Result&lt;</span><span style="color:#b48ead;">usize</span><span>, </span><span style="color:#b48ead;">usize</span><span>&gt; {
+</span><span>        </span><span style="color:#b48ead;">use </span><span>std::cmp::Ordering;
+</span><span>
+</span><span>        </span><span style="color:#b48ead;">let</span><span> len = elems.</span><span style="color:#96b5b4;">len</span><span>();
+</span><span>        </span><span style="color:#b48ead;">let </span><span>(</span><span style="color:#b48ead;">mut</span><span> left, </span><span style="color:#b48ead;">mut</span><span> right) = (</span><span style="color:#d08770;">0</span><span>, len);
+</span><span>
+</span><span>        </span><span style="color:#b48ead;">while</span><span> left &lt; right {
+</span><span>            println!(&quot;</span><span style="color:#d08770;">{left}</span><span style="color:#a3be8c;"> - </span><span style="color:#d08770;">{right}</span><span>&quot;);
+</span><span>            </span><span style="color:#b48ead;">let</span><span> mid = left + ((right - left) &gt;&gt; </span><span style="color:#d08770;">1</span><span>);
+</span><span>            </span><span style="color:#b48ead;">let</span><span> mid_key = </span><span style="color:#96b5b4;">key_fn</span><span>(elems[mid]);
+</span><span>
+</span><span>            </span><span style="color:#b48ead;">match</span><span> target.</span><span style="color:#96b5b4;">cmp</span><span>(&amp;mid_key) {
+</span><span>                Ordering::Less | Ordering::Equal =&gt; {
+</span><span>                    right = mid;
+</span><span>                }
+</span><span>                Ordering::Greater =&gt; {
+</span><span>                    left = mid + </span><span style="color:#d08770;">1</span><span>;
+</span><span>                }
+</span><span>            }
+</span><span>        }
+</span><span>
+</span><span>        </span><span style="color:#b48ead;">let</span><span> left_key = </span><span style="color:#96b5b4;">key_fn</span><span>(elems[left]);
+</span><span>        </span><span style="color:#b48ead;">if</span><span> left_key == target { Ok(left) } </span><span style="color:#b48ead;">else </span><span>{ Err(left) }
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">let </span><span>(</span><span style="color:#b48ead;">mut</span><span> len1, </span><span style="color:#b48ead;">mut</span><span> len2) = (nums1.</span><span style="color:#96b5b4;">len</span><span>(), nums2.</span><span style="color:#96b5b4;">len</span><span>());
+</span><span>    </span><span style="color:#b48ead;">let</span><span> len = len1 + len2;
+</span><span>    </span><span style="color:#b48ead;">let</span><span> mid = len &gt;&gt; </span><span style="color:#d08770;">1</span><span>;
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">if</span><span> len1 &gt; len2 {
+</span><span>        std::mem::swap(&amp;</span><span style="color:#b48ead;">mut</span><span> len1, &amp;</span><span style="color:#b48ead;">mut</span><span> len2);
+</span><span>        std::mem::swap(&amp;</span><span style="color:#b48ead;">mut</span><span> nums1, &amp;</span><span style="color:#b48ead;">mut</span><span> nums2);
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">let</span><span> elems: Vec&lt;</span><span style="color:#b48ead;">usize</span><span>&gt; = (</span><span style="color:#d08770;">0</span><span>..=len1).</span><span style="color:#96b5b4;">collect</span><span>();
+</span><span>    </span><span style="color:#b48ead;">let</span><span> search_res = </span><span style="color:#96b5b4;">binary_search_by_key</span><span>(&amp;elems[..], </span><span style="color:#d08770;">true</span><span>, |</span><span style="color:#bf616a;">id</span><span>| {
+</span><span>        </span><span style="color:#b48ead;">let</span><span> id1 = id;
+</span><span>        </span><span style="color:#b48ead;">let</span><span> id2 = mid - id1;
+</span><span>
+</span><span>        </span><span style="color:#b48ead;">if</span><span> id1 == len1 {
+</span><span>            </span><span style="color:#d08770;">true
+</span><span>        } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>            nums1[id1] &gt;= nums2[id2 - </span><span style="color:#d08770;">1</span><span>]
+</span><span>        }
+</span><span>    }).</span><span style="color:#96b5b4;">unwrap</span><span>();
+</span><span>    </span><span style="color:#b48ead;">let</span><span> id1 = search_res;
+</span><span>    </span><span style="color:#b48ead;">let</span><span> id2 = mid - id1;
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">if</span><span> len &amp; </span><span style="color:#d08770;">1 </span><span>== </span><span style="color:#d08770;">1 </span><span>{
+</span><span>        *(nums1.</span><span style="color:#96b5b4;">get</span><span>(id1).</span><span style="color:#96b5b4;">unwrap_or</span><span>(&amp;</span><span style="color:#b48ead;">i32</span><span>::</span><span style="color:#d08770;">MAX</span><span>).</span><span style="color:#96b5b4;">min</span><span>(nums2.</span><span style="color:#96b5b4;">get</span><span>(id2).</span><span style="color:#96b5b4;">unwrap_or</span><span>(&amp;</span><span style="color:#b48ead;">i32</span><span>::</span><span style="color:#d08770;">MAX</span><span>))) as </span><span style="color:#b48ead;">f64
+</span><span>    } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>        </span><span style="color:#b48ead;">let</span><span> left = *(nums1.</span><span style="color:#96b5b4;">get</span><span>(id1 - </span><span style="color:#d08770;">1</span><span>).</span><span style="color:#96b5b4;">unwrap_or</span><span>(&amp;</span><span style="color:#b48ead;">i32</span><span>::</span><span style="color:#d08770;">MIN</span><span>).</span><span style="color:#96b5b4;">max</span><span>(nums2.</span><span style="color:#96b5b4;">get</span><span>(id2 - </span><span style="color:#d08770;">1</span><span>).</span><span style="color:#96b5b4;">unwrap_or</span><span>(&amp;</span><span style="color:#b48ead;">i32</span><span>::</span><span style="color:#d08770;">MIN</span><span>)));
+</span><span>        </span><span style="color:#b48ead;">let</span><span> right = *(nums1.</span><span style="color:#96b5b4;">get</span><span>(id1).</span><span style="color:#96b5b4;">unwrap_or</span><span>(&amp;</span><span style="color:#b48ead;">i32</span><span>::</span><span style="color:#d08770;">MAX</span><span>).</span><span style="color:#96b5b4;">min</span><span>(nums2.</span><span style="color:#96b5b4;">get</span><span>(id2).</span><span style="color:#96b5b4;">unwrap_or</span><span>(&amp;</span><span style="color:#b48ead;">i32</span><span>::</span><span style="color:#d08770;">MAX</span><span>)));
+</span><span>        (left as </span><span style="color:#b48ead;">f64 </span><span>+ right as </span><span style="color:#b48ead;">f64</span><span>) / </span><span style="color:#d08770;">2.
+</span><span>    }
+</span><span>}
+</span></code></pre>
+
+
+         </main>
+
+         <footer>
+            
+<p class="tagsData">
+
+</p>
+
+            <hr>
+            <div class=footContainer>
+               <div class="footLeft">
+                  <p>Licensed under <a target="_blank" rel="noopener noreferrer" href="https://fr.wikipedia.org/wiki/Licence_MIT">MIT</a><br>
+                     Built with <a target="_blank" rel="noopener noreferrer" href="https://www.getzola.org">Zola</a> using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> theme &amp; <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/veqev">veqev</a> colors.<br>
+                  </p>
+               </div>
+               <div class="footRight">
+                  <!-- Size 46x46 -->
+                  <img class="footGif noStyle" loading="lazy" src="https://i.ibb.co/XYDpfcs/foot.gif" alt="footGif">
+                  <a class="metaData" target="_blank" rel="noopener noreferrer" href="https://refrigerator.navihx.top/atom.xml" title="Subscribe via RSS for updates.">RSS</a>
+               </div>
+            </div>
+         </footer>
+      </div>
+   </body>
+</html>

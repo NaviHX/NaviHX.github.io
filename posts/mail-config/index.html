@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+      <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+      <meta name="robots" content="index, follow">
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      <title>复古EMail配置</title>
+      
+      
+      
+      <meta name="title" content="复古EMail配置">
+      
+      
+      
+      <meta property="og:type" content="website">
+      <meta property="og:url" content="https://refrigerator.navihx.top/posts/mail-config/">
+      
+      <meta property="og:site_name" content="">
+      
+      
+      <meta property="og:title" content="复古EMail配置">
+      
+      
+      
+      <meta property="og:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      
+      <meta property="twitter:card" content="summary_large_image">
+      <meta property="twitter:url" content="https://refrigerator.navihx.top/posts/mail-config/">
+      
+      <meta property="twitter:title" content="复古EMail配置">
+      
+      
+      
+      <meta property="twitter:image" content="https:&#x2F;&#x2F;refrigerator.navihx.top&#x2F;favicon.ico">
+      
+      
+      <link rel="canonical" href="https://refrigerator.navihx.top/posts/mail-config/">
+      
+      <link rel="shortcut icon" type="image/x-icon" href="https://refrigerator.navihx.top/favicon.ico">
+      
+      
+      
+      
+      <link rel="alternate" type="application/atom+xml" title="RSS" href="https://refrigerator.navihx.top/atom.xml">
+      
+      
+      
+      <link rel="stylesheet" href="https://refrigerator.navihx.top/css/style.css"/>
+      
+   </head>
+   <body>
+      <div class="wrapper">
+         <header>
+            
+            <nav class="navBar">
+               
+               
+               
+               <a href="/" >&#x2F;home&#x2F;</a>
+               
+               
+               
+               
+               <a href="/posts" >&#x2F;posts&#x2F;</a>
+               
+               
+
+               <div class="themeSwitch">
+                  <button class="themeButton light" onclick="setTheme('light')" title="Light mode">◐</button>
+                  <button class="themeButton dark" onclick="setTheme('dark')" title="Dark mode">◑</button>
+               </div>
+            </nav>
+            
+
+            <script>
+               const setTheme = (theme) => {
+                   document.documentElement.className = theme;
+                   localStorage.setItem('theme', theme);
+               }
+               const getTheme = () => {
+                   const theme = localStorage.getItem('theme');
+                   theme && setTheme(theme);
+               }
+               getTheme()
+            </script>
+         </header>
+
+         <main>
+            
+
+
+
+
+<h2 id="intro">Intro</h2>
+<p>Thunderbird 曾经是我的主力邮件客户端, 它支持非常多的功能, 包括 RSS ,
+多种即时聊天( Matrix 也包括在其中), 还能与网络日历同步.
+但是大部分功能我都用不上: 我只是需要一个简单的邮件客户端,
+让我可以流畅地处理工作就行了. 这时Thunderbird丰富的功能反而成了累赘.</p>
+<p>最后选择了 <a href="https://mutt.org/">Mutt</a> 作为我的新邮件客户端(事实上, 在本篇
+Post 写作的三个月前我就在使用 <code>Mutt</code> 了). 这是一个最早发行于 199X
+年的基于文本的邮件客户端, 截止本篇 Post 写成, 已经更新到了 2.2.10 版本.
+支持的特性包括:</p>
+<ul>
+<li>颜色支持</li>
+<li>Threading</li>
+<li>MIME Support</li>
+<li>IMAP / POP3 支持</li>
+<li>高可定制</li>
+</ul>
+<p>这里所写的特性并不是 <code>Mutt</code> 的全部. 因为它的高可定制,
+我们可以把它变成我们想要它成为的任何模样, 正如其开发者所说:</p>
+<p><em>&quot;All mail clients suck. This one just sucks less&quot;</em></p>
+<h2 id="guan-yu-dian-zi-you-jian-de-jian-dan-jie-shao">关于电子邮件的简单介绍</h2>
+<h3 id="dang-wo-men-shi-yong-dian-zi-you-jian-shi-dao-di-fa-sheng-liao-shi-yao">当我们使用电子邮件时, 到底发生了什么?</h3>
+<p>假设我们的邮件地址是 <code>a@a.com</code> , 配置的 SMTP 服务器是 <code>smtp.a.com</code> ,
+接收者的邮件地址是 <code>b@b.com</code> .</p>
+<ul>
+<li>使用SMTP协议, 将邮件推送到我们的 SMTP 服务器上.</li>
+<li><code>smtp.a.com</code> 的 MTA 接收到邮件后
+<ul>
+<li>找到收件人的邮件服务器地址 <code>b.com</code></li>
+<li>向 DNS 服务器查询 <code>b.com</code> 的 MX 记录, 得到 <code>mail.b.com</code></li>
+<li>向 DNS 服务器查询 <code>mail.b.com</code> 的 IP 地址, 得到 <code>1.2.3.4</code></li>
+<li>向该 IP 地址使用 SMTP 协议发送邮件</li>
+</ul>
+</li>
+<li>接收者的邮件服务器收到邮件, 确认收件人在当前服务器上后, 使用 MDA
+投放邮件(可能是对应用户的文件夹, 也有可能是数据库)</li>
+</ul>
+<p>这个时候, 邮件仍然在服务器上, 接收者可以登录邮件服务器查看邮件,
+比如ssh登录查看, 或者登录邮件服务商提供的网页接口. 当然,
+我们还有另外一个选择: 将邮件下载下来. 有两个协议可以实现这个目的, IMAP
+和 POP3 . 下面是两个协议间的简单对比:</p>
+<table><thead><tr><th>POP3</th><th>IMAP</th></tr></thead><tbody>
+<tr><td>同时只能有一个客户端访问</td><td>可以有多个客户端访问</td></tr>
+<tr><td>单向传输</td><td>双向传输</td></tr>
+<tr><td>快</td><td>相对 POP3 更慢</td></tr>
+<tr><td>删除模式和保留模式. 区别在于收取邮件后是否删除服务器上的备份</td><td>收取后还能保留副本</td></tr>
+<tr><td>一次需要收取所有邮件</td><td>在下载前可以查看邮件头决定是否下载</td></tr>
+</tbody></table>
+<h3 id="you-jian-ke-hu-duan-de-jia-gou">邮件客户端的架构</h3>
+<p>我们的邮件客户端的架构如下:</p>
+<ul>
+<li>MUA: mutt , 用于查看邮件. 虽然 mutt 拥有 IMAP 和 POP3 支持,
+但是使用起来不算方便, 我们将要用其他的软件来实现这些功能.</li>
+<li>MRA: fetchmail , 用于从服务器收取邮件, 实现 IMAP 和 POP3 的功能.
+fetchmail 也可以看作一个特殊的 MTA : 它将邮件收取后, 也会将邮件输出给
+MDA 进行投送. 由大名鼎鼎的 Raymond 开发.</li>
+<li>MDA: procmail , 投送邮件. 根据邮件的内容投送到对应的地方.</li>
+<li>smtp: msmtp , 发送邮件.</li>
+</ul>
+<p>处理邮件的流程就是由 fetchmail 从邮件服务器收取邮件, 将邮件通过 stdin
+输入给 procmail 投递到对应的文件夹. 使用 mutt 访问邮件文件夹.
+需要发送邮件时, 通过 mutt 调用编辑器 (比如 neovim / vim / nano)
+进行邮件内容编辑, 再调用 msmtp 发送到 SMTP 服务器.
+在发送邮件和阅读邮件时, 也可以使用 gpg 来对邮件进行签名加密 / 验证解密.</p>
+<h2 id="fetchmail-procmail">fetchmail &amp; procmail</h2>
+<p>fetchmail 负责收取邮件, 相关的配置在 <code>$HOME/.fetchmailrc</code> ,
+我们可以在配置文件中指定我们需要收取的邮件地址.</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>poll pop.AAA.com protocol POP3 user &quot;me@AAA.com&quot; password &quot;123&quot;
+</span><span>poll pop.BBB.com protocol POP3 user &quot;me&quot; there with password &quot;123&quot; is falko here fetchall
+</span><span>poll pop.CCC.com protocol POP3 user &quot;me&quot; there with password &quot;123&quot; is till here keep
+</span><span>poll pop.DDD.com
+</span><span>  protocol POP3
+</span><span>  user &quot;me&quot;
+</span><span>  password &quot;123&quot;
+</span><span>
+</span><span># 全局选项
+</span><span>mimedecode
+</span><span>mda &quot;/usr/local/bin/procmail&quot;
+</span></code></pre>
+<p>poll &lt;ADDRESS&gt;<br />
+指定一个需要收取的账户</p>
+<p>protocol POP3 | IMAP<br />
+指定使用的协议</p>
+<p>user &lt;USERNAME&gt;<br />
+指定用户名, 或者邮件地址</p>
+<p>password &lt;PASSWORD&gt;<br />
+账户密码</p>
+<p>&lt;OPTION&gt; ..<br />
+包括 fetchall, nofetchall, keep, nokeep 等等</p>
+<p>mimedecode<br />
+自动解码 mime</p>
+<p>mda &lt;PATH&gt;<br />
+指定 mda 程序的路径, 这里我们使用 procmail</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#65737e;"># 收取未读邮件
+</span><span style="color:#bf616a;">$</span><span> fetchmail
+</span><span>
+</span><span style="color:#65737e;"># 收取所有邮件
+</span><span style="color:#bf616a;">$</span><span> fetchmail</span><span style="color:#bf616a;"> -a
+</span><span>
+</span><span style="color:#65737e;"># 收取未读邮件, 但是不删除服务器上已经收取的邮件
+</span><span style="color:#bf616a;">$</span><span> fetchmail</span><span style="color:#bf616a;"> -k
+</span><span>
+</span><span style="color:#65737e;"># 设置超时时间(s)
+</span><span style="color:#bf616a;">$</span><span> fetchmail</span><span style="color:#bf616a;"> -t</span><span> 60
+</span></code></pre>
+<p>每一次执行上述命令都会收取所有的邮件并交由 mda 处理,
+并不会在后台自动收件, 所以我们需要手动执行命令 / Cron 定期任务.</p>
+<p>procmail 的配置在 <code>$HOME/.procmailrc</code> ,
+其中定义了收取到的邮件的处理规则, 使用正则表达式定义.</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>MAILDIR=$HOME/Mail   #邮件存储地址
+</span><span>DEFAULT=$MAILDIR/inbox   #默认：收件箱
+</span><span>VERBOSE=off
+</span><span>LOGFILE=/tmp/procmaillog
+</span><span>
+</span><span># 某个垃圾邮件规则
+</span><span>:0
+</span><span>* ^From: spam@aaa\.com
+</span><span>/dev/null    #垃圾文件的存储位置
+</span><span>
+</span><span># 其它所有都存到收件箱中
+</span><span>:0:
+</span><span>inbox/
+</span></code></pre>
+<p>完成配置后, 我们使用 fetchmail
+收件后就能在收件箱路径下找到我们的新邮件了.</p>
+<h2 id="msmtp">msmtp</h2>
+<p>msmtp 的配置就很简单了,
+基本上就是将平常我们使用邮件客户端时需要填写的配置内容以文本的形式填写到配置文件中.
+msmtp 的配置文件路径为 <code>$HOME/.msmtprc</code> .</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>acount default
+</span><span>auth login
+</span><span>host smtp.XXX.com
+</span><span>port 587
+</span><span>from ME@XXX.com
+</span><span>user ME
+</span><span>password passwd
+</span><span>tls on
+</span><span>tls_certcheck off
+</span><span>
+</span><span>logfile /tmp/msmtp.logrc
+</span></code></pre>
+<p>如果需要多账户, 我们只需要定义多个 account &lt;ACCOUNT&gt; , 在调用 msmtp
+时添加参数 ~ -a &lt;ACCOUNT&gt; ~ 即可.</p>
+<h2 id="mutt">mutt</h2>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span># 通用设定
+</span><span>set use_from=yes
+</span><span>set envelope_from=yes
+</span><span>set move=yes    #移动已读邮件
+</span><span>set include #回复的时候调用原文
+</span><span>set charset=&quot;utf-8&quot;
+</span><span>
+</span><span># 发送者账号
+</span><span>set realname=&quot;Phillips Horselover&quot;
+</span><span>set from=&quot;phillips@navihx.top&quot;
+</span><span>
+</span><span># 分类邮箱
+</span><span>set mbox_type = Maildir #Mail box type
+</span><span>set folder = &quot;$HOME/Mail&quot;
+</span><span>set spoolfile = &quot;$HOME/Mail/inbox&quot; #INBOX
+</span><span>set mbox=&quot;$HOME/Mail/seen&quot;  #Seen box
+</span><span>set record=&quot;$HOME/Mail/sent&quot;  #Sent box
+</span><span>set postponed=&quot;$HOME/Mail/draft&quot;  #Draft box
+</span><span>
+</span><span>set editor=&quot;vim -nw&quot;
+</span><span>set sendmail=&quot;/usr/local/bin/msmtp&quot;
+</span></code></pre>
+<p>以上的配置对于只需要一个账户的使用者已经足够了.
+但是如果你需要使用很多个邮件账户, 每个账户中都有不同的配置, 可以使用
+mutt 提供的 folder hooker 功能: 当 mutt 进入某个邮件文件夹时,
+重新读入一段配置来覆盖原本的配置.</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>folder-hook &#39;INBOX&#39; &#39;source ~/.config/mutt/accounts/default&#39;
+</span><span>folder-hook &#39;gmail&#39; &#39;source ~/.config/mutt/accounts/gmail&#39;
+</span><span>folder-hook &#39;personal&#39; &#39;source ~/.config/mutt/accounts/personal&#39;
+</span><span>folder-hook &#39;phillips&#39; &#39;source ~/.config/mutt/accounts/phillips&#39;
+</span></code></pre>
+<h2 id="qi-ta">其他</h2>
+<h3 id="shi-yong-gpg-jia-mi-qian-ming-you-jian">使用 GPG 加密 / 签名邮件</h3>
+<p>在 muttrc 中添加 <code>source $HOME/.mutt/gpg.rc</code> , 在对应文件中写入 gpg
+的设置. 示例配置在 <code>/usr/share/doc/mutt/smaples/gpg.rc</code> .</p>
+<h3 id="bao-hu-ni-de-mi-ma">保护你的密码</h3>
+<p>我们在上面的配置中全部写了明文的密码, 这是非常不安全的,
+即使我们可以将配置文件的权限设置为 <code>700</code> 或者更低. 我们依然可以使用 gpg
+来对我们的密码进行加密.</p>
+<p>msmtp 可以使用 passwordeval &lt;COMMAND&gt; 代替 password &lt;PASSWORD&gt; ,
+它执行一条指令, 将指令的输出作为密码. 我们可以这样写
+<code>passwordeval  &quot;gpg --quiet --for-your-eyes-only --no-tty --decrypt $HOME/mail/.msmtp-credentials.gpg&quot;</code>
+.</p>
+<p>mutt 可以将我们密码的设置放到一个单独文件中, 对其加密, 然后在 mutt
+配置中先对其解密在执行. 比如我们这样设置了密码:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span># .my-passwordrc
+</span><span>set my_pass = &quot;password&quot;
+</span></code></pre>
+<p>我们对其加密得到一个新文件 .my-passwordrc.gpg . 在 mutt 配置文件中新增:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>source &quot;gpg -dq $HOME/.my-passwordrc.gpg |&quot;
+</span></code></pre>
+
+
+         </main>
+
+         <footer>
+            
+<p class="tagsData">
+
+</p>
+
+            <hr>
+            <div class=footContainer>
+               <div class="footLeft">
+                  <p>Licensed under <a target="_blank" rel="noopener noreferrer" href="https://fr.wikipedia.org/wiki/Licence_MIT">MIT</a><br>
+                     Built with <a target="_blank" rel="noopener noreferrer" href="https://www.getzola.org">Zola</a> using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> theme &amp; <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/veqev">veqev</a> colors.<br>
+                  </p>
+               </div>
+               <div class="footRight">
+                  <!-- Size 46x46 -->
+                  <img class="footGif noStyle" loading="lazy" src="https://i.ibb.co/XYDpfcs/foot.gif" alt="footGif">
+                  <a class="metaData" target="_blank" rel="noopener noreferrer" href="https://refrigerator.navihx.top/atom.xml" title="Subscribe via RSS for updates.">RSS</a>
+               </div>
+            </div>
+         </footer>
+      </div>
+   </body>
+</html>
